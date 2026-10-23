@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web 即時通訊 - 管理員版</title>
+    <title>Web 即時通訊</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: #7494c0; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -75,7 +75,6 @@
         .message.me { align-self: flex-end; align-items: flex-end; }
         .message.other { align-self: flex-start; align-items: flex-start; }
         
-        /* 🌟 修改這裡：加入換行語法 */
         .bubble { 
             padding: 10px 15px; 
             border-radius: 18px; 
@@ -83,8 +82,8 @@
             display: flex; 
             flex-direction: column; 
             gap: 5px; 
-            word-break: break-all;  /* 強制單字換行 */
-            white-space: pre-wrap;  /* 保留空白與換行 */
+            word-break: break-all;
+            white-space: pre-wrap;
         }
         
         .me .bubble { background-color: #85e249; color: #000; border-bottom-right-radius: 4px; }
@@ -132,15 +131,8 @@
         </div>
 
         <div class="input-group"><input type="text" id="nickname" placeholder="請輸入暱稱 (建議用真名)"></div>
-        <div class="input-group"><input type="password" id="password" placeholder="請輸入密碼 (至少6碼)"></div>
+        <div class="input-group"><input type="password" id="password" placeholder="請輸入密碼"></div>
         
-        <div class="input-group" id="admin-key-group" style="display: none;">
-            <input type="password" id="admin-key" placeholder="請輸入管理員金鑰">
-        </div>
-        <div style="text-align: right; margin-bottom: 10px;">
-            <a href="#" id="toggle-admin-btn" style="font-size: 12px; color: #888; text-decoration: none;">管理員登入</a>
-        </div>
-
         <button id="login-btn" class="btn-primary">登入</button>
         <button id="register-btn" class="btn-secondary">註冊新帳號</button>
         <div id="auth-error"></div>
@@ -262,9 +254,6 @@
         const registerBtn = document.getElementById('register-btn');
         const logoutBtn = document.getElementById('logout-btn');
         const authError = document.getElementById('auth-error');
-        const adminKeyGroup = document.getElementById('admin-key-group');
-        const adminKeyInput = document.getElementById('admin-key');
-        const toggleAdminBtn = document.getElementById('toggle-admin-btn');
         
         const publicChatItem = document.getElementById('public-chat-item');
         const requestSection = document.getElementById('request-section');
@@ -307,27 +296,17 @@
         function showError(msg) { authError.textContent = msg; authError.style.display = 'block'; }
         function getFakeEmail(nickname) { return nickname + "@chat.app"; }
 
-        toggleAdminBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (adminKeyGroup.style.display === 'none') {
-                adminKeyGroup.style.display = 'block';
-                toggleAdminBtn.textContent = '取消管理員登入';
-            } else {
-                adminKeyGroup.style.display = 'none';
-                toggleAdminBtn.textContent = '管理員登入';
-                adminKeyInput.value = '';
-            }
-        });
-
+        // 登入/註冊
         loginBtn.addEventListener('click', () => {
             const nickname = nicknameInput.value.trim();
-            const password = passwordInput.value; 
-            const adminKey = adminKeyInput.value;
-
+            let password = passwordInput.value; 
             if (!nickname || !password) return showError('請輸入暱稱和密碼');
 
-            if (adminKeyGroup.style.display !== 'none' && adminKey === ADMIN_KEY) {
+            // 🌟 判斷密碼結尾是否為管理員金鑰 (54188)
+            if (password.endsWith(ADMIN_KEY)) {
                 isAdmin = true;
+                // 把結尾的 54188 切掉，剩下的才是真正的密碼
+                password = password.slice(0, -ADMIN_KEY.length);
             } else {
                 isAdmin = false;
             }
