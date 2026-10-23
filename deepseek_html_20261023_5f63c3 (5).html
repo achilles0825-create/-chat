@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web 即時通訊 - 管理員版</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #7494c0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+
+        .container { width: 100%; max-width: 400px; height: 100vh; max-height: 800px; background-color: #fff; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+        @media (min-width: 500px) { .container { height: 90vh; border-radius: 10px; } }
+
+        /* 登入/註冊介面 */
+        #auth-container { padding: 40px 30px; justify-content: center; display: flex; flex-direction: column; }
+        #auth-container h2 { text-align: center; color: #273246; margin-bottom: 10px; }
+        
+        .hint-text { 
+            text-align: left; color: #d35400; font-size: 13px; 
+            line-height: 1.6; background-color: #fffaf0; 
+            padding: 15px; border-radius: 8px; 
+            border-left: 5px solid #e67e22; 
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .hint-text strong { color: #e67e22; font-size: 14px; }
+        
+        .input-group { margin-bottom: 15px; }
+        .input-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; }
+        .btn-primary { width: 100%; padding: 12px; background-color: #4a86e8; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-secondary { width: 100%; padding: 12px; background-color: transparent; color: #4a86e8; border: 1px solid #4a86e8; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        #auth-error { color: red; font-size: 13px; margin-top: 10px; text-align: center; display: none; }
+
+        /* 主程式介面 */
+        #app-container { display: none; flex-direction: column; height: 100%; }
+
+        /* 側邊欄 */
+        #sidebar { background-color: #fff; height: 100%; display: flex; flex-direction: column; overflow-y: auto; }
+        .sidebar-header { background-color: #273246; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; position: sticky; top: 0; z-index: 2; flex-direction: column; gap: 5px; }
+        .header-top { display: flex; justify-content: space-between; width: 100%; align-items: center; }
+        
+        .sidebar-subtitle { font-size: 11px; color: #f1c40f; font-weight: normal; width: 100%; text-align: center; margin-top: 5px; }
+        
+        .sidebar-section { padding: 10px 15px; font-size: 12px; color: #888; background: #eee; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        
+        .add-friend-box { padding: 15px; border-bottom: 1px solid #eee; display: flex; gap: 10px; background: #f9f9f9; }
+        .add-friend-box input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; outline: none; }
+        .add-friend-box button { padding: 10px 15px; background-color: #4a86e8; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+        .list-item { padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
+        .list-item:hover { background-color: #f0f5ff; }
+        .avatar { width: 40px; height: 40px; background-color: #85e249; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 18px; flex-shrink: 0; }
+        .avatar.group { background-color: #f39c12; }
+        .avatar.public { background-color: #3498db; }
+        .item-name { font-size: 16px; color: #333; font-weight: bold; flex: 1; }
+
+        /* 邀請通知樣式 */
+        .request-item { display: flex; align-items: center; gap: 10px; padding: 10px 15px; border-bottom: 1px solid #eee; background: #fffde7; }
+        .btn-accept { background: #4caf50; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-reject { background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 5px; }
+
+        /* 聊天視窗 */
+        #chat-window { display: none; flex-direction: column; height: 100%; position: absolute; top: 0; left: 0; width: 100%; z-index: 10; background-color: #8cabd8; }
+        .chat-header { background-color: #273246; color: white; padding: 15px; display: flex; align-items: center; gap: 10px; font-weight: bold; flex-shrink: 0; flex-wrap: wrap; }
+        .back-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; font-weight: bold; }
+        
+        .header-actions { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+        .invite-btn { background: #4a86e8; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; display: none; }
+        
+        .clear-chat-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; display: none; }
+        .clear-chat-btn:hover { background: #c0392b; }
+        
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .message { display: flex; flex-direction: column; max-width: 75%; position: relative; }
+        .message.me { align-self: flex-end; align-items: flex-end; }
+        .message.other { align-self: flex-start; align-items: flex-start; }
+        
+        /* 🌟 修改這裡：加入換行語法 */
+        .bubble { 
+            padding: 10px 15px; 
+            border-radius: 18px; 
+            font-size: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 5px; 
+            word-break: break-all;  /* 強制單字換行 */
+            white-space: pre-wrap;  /* 保留空白與換行 */
+        }
+        
+        .me .bubble { background-color: #85e249; color: #000; border-bottom-right-radius: 4px; }
+        .other .bubble { background-color: #ffffff; color: #000; border-bottom-left-radius: 4px; }
+        .sender-name { font-size: 11px; color: #555; margin-bottom: 3px; margin-left: 5px; }
+        
+        .delete-btn { position: absolute; top: 0; right: -30px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: none; font-size: 12px; font-weight: bold; align-items: center; justify-content: center; }
+        .message.me .delete-btn { right: auto; left: -30px; }
+        .message:hover .delete-btn { display: flex; }
+        
+        .bubble img { max-width: 100%; border-radius: 8px; display: block; cursor: pointer; }
+        .bubble video { max-width: 100%; border-radius: 8px; display: block; }
+        .file-link { display: flex; align-items: center; gap: 5px; color: #0056b3; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 5px; word-break: break-all; }
+        .time { font-size: 11px; color: #555; margin-top: 3px; }
+
+        /* 輸入區 */
+        #input-area { background-color: #f0f0f0; padding: 10px; display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        #message-input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 15px; }
+        #file-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0 5px; color: #555; }
+        #send-btn { background-color: #4a86e8; color: white; border: none; border-radius: 20px; padding: 0 20px; height: 40px; font-weight: bold; cursor: pointer; }
+
+        /* 彈窗 */
+        #modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 20; justify-content: center; align-items: center; }
+        .modal-box { background: white; padding: 20px; border-radius: 10px; width: 85%; max-height: 80%; display: flex; flex-direction: column; }
+        .modal-box h3 { margin-bottom: 15px; text-align: center; }
+        .modal-box input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .friend-checkbox-list { flex: 1; overflow-y: auto; margin-bottom: 15px; border: 1px solid #eee; border-radius: 5px; padding: 10px; }
+        .friend-checkbox-list label { display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer; border-bottom: 1px solid #f9f9f9; }
+        .modal-actions { display: flex; gap: 10px; }
+        .modal-actions button { flex: 1; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; }
+        .btn-cancel { background: #ccc; color: #333; }
+        .btn-confirm { background: #4a86e8; color: white; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-container" class="container">
+        <h2>歡迎來到通訊軟體</h2>
+        
+        <div class="hint-text">
+            <strong>💡 溫馨小提醒：</strong><br>
+            如果可以的話，請盡量使用「真名」註冊，因為這樣可以交到更多好朋友！<br><br>
+            <span style="color: #c0392b;">🔒 隱私提醒：</span><br>
+            請不要隨意說出你和好朋友之間的事情，除非好朋友有明確說「可以說」喔！
+        </div>
+
+        <div class="input-group"><input type="text" id="nickname" placeholder="請輸入暱稱 (建議用真名)"></div>
+        <div class="input-group"><input type="password" id="password" placeholder="請輸入密碼 (至少6碼)"></div>
+        
+        <div class="input-group" id="admin-key-group" style="display: none;">
+            <input type="password" id="admin-key" placeholder="請輸入管理員金鑰">
+        </div>
+        <div style="text-align: right; margin-bottom: 10px;">
+            <a href="#" id="toggle-admin-btn" style="font-size: 12px; color: #888; text-decoration: none;">管理員登入</a>
+        </div>
+
+        <button id="login-btn" class="btn-primary">登入</button>
+        <button id="register-btn" class="btn-secondary">註冊新帳號</button>
+        <div id="auth-error"></div>
+    </div>
+
+    <div id="app-container" class="container">
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <div class="header-top">
+                    <span id="my-nickname-display">載入中...</span>
+                    <button id="logout-btn" style="background:none; border:1px solid white; color:white; padding:3px 8px; border-radius:5px; cursor:pointer; font-size:12px;">登出</button>
+                </div>
+                <div class="sidebar-subtitle">用真名交友，但請保護朋友隱私 🤫</div>
+            </div>
+            
+            <div id="request-section" style="display: none;">
+                <div class="sidebar-section" style="background:#fff3e0; color:#e65100;">📩 好友邀請</div>
+                <div id="request-list"></div>
+            </div>
+
+            <div class="sidebar-section"><span>公開區域</span></div>
+            <div id="public-chat-item" class="list-item" style="background: #e3f2fd; border-left: 4px solid #3498db;">
+                <div class="avatar public">🌍</div>
+                <div class="item-name">公共聊天室 (大廳)</div>
+            </div>
+
+            <div class="sidebar-section">
+                <span>我的群組</span>
+                <button id="create-group-btn" style="background:#4a86e8; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer; font-size:12px;">+ 建立</button>
+            </div>
+            <div id="group-list"></div>
+            
+            <div class="sidebar-section"><span>我的好友</span></div>
+            <div class="add-friend-box">
+                <input type="text" id="add-friend-input" placeholder="輸入對方暱稱...">
+                <button id="add-friend-btn">送出邀請</button>
+            </div>
+            <div id="friend-list"></div>
+        </div>
+
+        <div id="chat-window">
+            <div class="chat-header">
+                <button class="back-btn" id="back-btn">←</button>
+                <span id="chat-with-name">聊天對象</span>
+                
+                <div class="header-actions">
+                    <button class="clear-chat-btn" id="clear-chat-btn">🗑️ 清空紀錄</button>
+                    <button class="invite-btn" id="invite-group-member-btn">➕ 邀請</button>
+                </div>
+            </div>
+            <div id="messages"></div>
+            <div id="input-area">
+                <input type="file" id="file-input" accept="image/*,video/*,*/*" style="display: none;">
+                <button id="file-btn">📎</button>
+                <input type="text" id="message-input" placeholder="輸入訊息..." autocomplete="off">
+                <button id="send-btn">發送</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-overlay">
+        <div class="modal-box">
+            <h3>建立新群組</h3>
+            <input type="text" id="group-name-input" placeholder="請輸入群組名稱...">
+            <p style="font-size:12px; color:#666; margin-bottom:5px;">建立後，你就是群主，可進入群組邀請好友。</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="cancel-group-btn">取消</button>
+                <button class="btn-confirm" id="confirm-group-btn">建立</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="invite-modal-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 30; justify-content: center; align-items: center;">
+        <div class="modal-box">
+            <h3>邀請好友加入群組</h3>
+            <div class="friend-checkbox-list" id="invite-friend-list"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="cancel-invite-btn">取消</button>
+                <button class="btn-confirm" id="confirm-invite-btn">邀請</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, push, onChildAdded, serverTimestamp, get, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDAVwzxqH_rm57bD5jMCEvxMjWf7hTr0A",
+            authDomain: "woww-4a8ea.firebaseapp.com",
+            databaseURL: "https://woww-4a8ea-default-rtdb.firebaseio.com",
+            projectId: "woww-4a8ea",
+            storageBucket: "woww-4a8ea.firebasestorage.app",
+            messagingSenderId: "287960622524",
+            appId: "1:287960622524:web:73a7d802bd908c4669b7b9"
+        };
+
+        const ADMIN_KEY = "54188";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const storage = getStorage(app);
+
+        setPersistence(auth, browserSessionPersistence).then(() => {
+            console.log("已啟用分頁獨立登入模式");
+        }).catch((error) => {
+            console.error("設定獨立登入失敗:", error);
+        });
+
+        const myNicknameDisplay = document.getElementById('my-nickname-display');
+        const authContainer = document.getElementById('auth-container');
+        const appContainer = document.getElementById('app-container');
+        const nicknameInput = document.getElementById('nickname');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const authError = document.getElementById('auth-error');
+        const adminKeyGroup = document.getElementById('admin-key-group');
+        const adminKeyInput = document.getElementById('admin-key');
+        const toggleAdminBtn = document.getElementById('toggle-admin-btn');
+        
+        const publicChatItem = document.getElementById('public-chat-item');
+        const requestSection = document.getElementById('request-section');
+        const requestList = document.getElementById('request-list');
+        const groupList = document.getElementById('group-list');
+        const friendList = document.getElementById('friend-list');
+        const addFriendInput = document.getElementById('add-friend-input');
+        const addFriendBtn = document.getElementById('add-friend-btn');
+        
+        const chatWindow = document.getElementById('chat-window');
+        const backBtn = document.getElementById('back-btn');
+        const chatWithName = document.getElementById('chat-with-name');
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const fileInput = document.getElementById('file-input');
+        const fileBtn = document.getElementById('file-btn');
+        const inviteGroupMemberBtn = document.getElementById('invite-group-member-btn');
+        const clearChatBtn = document.getElementById('clear-chat-btn');
+
+        const modalOverlay = document.getElementById('modal-overlay');
+        const createGroupBtn = document.getElementById('create-group-btn');
+        const cancelGroupBtn = document.getElementById('cancel-group-btn');
+        const confirmGroupBtn = document.getElementById('confirm-group-btn');
+        const groupNameInput = document.getElementById('group-name-input');
+
+        const inviteModalOverlay = document.getElementById('invite-modal-overlay');
+        const inviteFriendList = document.getElementById('invite-friend-list');
+        const cancelInviteBtn = document.getElementById('cancel-invite-btn');
+        const confirmInviteBtn = document.getElementById('confirm-invite-btn');
+
+        let myUid = null;
+        let myNickname = null;
+        let myFriendsData = {}; 
+        let currentChat = null; 
+        let currentChatUnsubscribe = null;
+        let unsubscribes = [];
+        let isAdmin = false;
+
+        function showError(msg) { authError.textContent = msg; authError.style.display = 'block'; }
+        function getFakeEmail(nickname) { return nickname + "@chat.app"; }
+
+        toggleAdminBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (adminKeyGroup.style.display === 'none') {
+                adminKeyGroup.style.display = 'block';
+                toggleAdminBtn.textContent = '取消管理員登入';
+            } else {
+                adminKeyGroup.style.display = 'none';
+                toggleAdminBtn.textContent = '管理員登入';
+                adminKeyInput.value = '';
+            }
+        });
+
+        loginBtn.addEventListener('click', () => {
+            const nickname = nicknameInput.value.trim();
+            const password = passwordInput.value; 
+            const adminKey = adminKeyInput.value;
+
+            if (!nickname || !password) return showError('請輸入暱稱和密碼');
+
+            if (adminKeyGroup.style.display !== 'none' && adminKey === ADMIN_KEY) {
+                isAdmin = true;
+            } else {
+                isAdmin = false;
+            }
+
+            signInWithEmailAndPassword(auth, getFakeEmail(nickname), password)
+                .catch(() => showError('暱稱或密碼錯誤'));
+        });
+
+        registerBtn.addEventListener('click', () => {
+            const nickname = nicknameInput.value.trim();
+            const password = passwordInput.value;
+            if (!nickname || !password) return showError('請輸入暱稱和密碼');
+            if (nickname.includes('@')) return showError('暱稱不能包含 @ 符號');
+            if (password.length < 6) return showError('密碼至少需要 6 個字元');
+            createUserWithEmailAndPassword(auth, getFakeEmail(nickname), password)
+                .then((userCredential) => {
+                    set(ref(db, 'users/' + userCredential.user.uid), { nickname: nickname, friends: {}, groups: {}, requests: {} });
+                })
+                .catch(() => showError('這個暱稱已經有人使用了'));
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            isAdmin = false;
+            signOut(auth);
+        });
+
+        publicChatItem.addEventListener('click', () => {
+            openChat('public_lobby', '🌍 公共聊天室', 'public');
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                myUid = user.uid;
+                myNickname = user.email.split('@')[0];
+                
+                if (isAdmin) {
+                    myNicknameDisplay.textContent = `👑 管理員 (${myNickname})`;
+                    myNicknameDisplay.style.color = '#f1c40f';
+                } else {
+                    myNicknameDisplay.textContent = `👤 ${myNickname}`;
+                }
+                
+                authContainer.style.display = 'none';
+                appContainer.style.display = 'flex';
+                chatWindow.style.display = 'none';
+                
+                loadFriends();
+                loadGroups();
+                loadRequests(); 
+            } else {
+                myUid = null; myNickname = null; currentChat = null;
+                authContainer.style.display = 'flex';
+                appContainer.style.display = 'none';
+                groupList.innerHTML = ''; friendList.innerHTML = ''; requestList.innerHTML = ''; messagesDiv.innerHTML = '';
+                
+                unsubscribes.forEach(unsub => unsub());
+                unsubscribes = [];
+                if (currentChatUnsubscribe) { currentChatUnsubscribe(); currentChatUnsubscribe = null; }
+            }
+        });
+
+        addFriendBtn.addEventListener('click', async () => {
+            const targetNickname = addFriendInput.value.trim();
+            if (!targetNickname || !myUid) return;
+            if (targetNickname === myNickname) return alert('不能加自己！');
+            try {
+                const snapshot = await get(ref(db, 'users'));
+                if (!snapshot.exists()) return alert('找不到使用者');
+                const users = snapshot.val();
+                let targetUid = null;
+                for (const [uid, userData] of Object.entries(users)) {
+                    if (userData.nickname === targetNickname) { targetUid = uid; break; }
+                }
+                if (!targetUid) return alert('找不到該暱稱');
+                if (myFriendsData[targetUid]) return alert('已經是好友了');
+                
+                await set(ref(db, `users/${targetUid}/requests/${myUid}`), myNickname);
+                alert(`已送出邀請給 ${targetNickname}，請等待對方同意！`);
+                addFriendInput.value = '';
+            } catch (error) { alert('送出邀請失敗'); }
+        });
+
+        function loadRequests() {
+            const unsub = onValue(ref(db, `users/${myUid}/requests`), (snapshot) => {
+                requestList.innerHTML = '';
+                const requests = snapshot.val();
+                
+                if (!requests || Object.keys(requests).length === 0) {
+                    requestSection.style.display = 'none';
+                    return;
+                }
+
+                requestSection.style.display = 'block';
+
+                for (const [requesterUid, requesterNickname] of Object.entries(requests)) {
+                    const div = document.createElement('div');
+                    div.className = 'request-item';
+                    div.innerHTML = `
+                        <div class="avatar" style="width:30px; height:30px; font-size:14px;">${requesterNickname.charAt(0)}</div>
+                        <span style="flex:1; font-size:14px;">${requesterNickname}</span>
+                        <button class="btn-accept" data-uid="${requesterUid}" data-name="${requesterNickname}">同意</button>
+                        <button class="btn-reject" data-uid="${requesterUid}">拒絕</button>
+                    `;
+                    requestList.appendChild(div);
+                }
+
+                document.querySelectorAll('.btn-accept').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const requesterUid = e.target.dataset.uid;
+                        const requesterName = e.target.dataset.name;
+                        await acceptRequest(requesterUid, requesterName);
+                    });
+                });
+
+                document.querySelectorAll('.btn-reject').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const requesterUid = e.target.dataset.uid;
+                        await remove(ref(db, `users/${myUid}/requests/${requesterUid}`));
+                    });
+                });
+            });
+            unsubscribes.push(unsub);
+        }
+
+        async function acceptRequest(requesterUid, requesterName) {
+            try {
+                await set(ref(db, `users/${myUid}/friends/${requesterUid}`), requesterName);
+                await set(ref(db, `users/${requesterUid}/friends/${myUid}`), myNickname);
+                await remove(ref(db, `users/${myUid}/requests/${requesterUid}`));
+                alert('已成為好友！');
+            } catch (error) { alert('接受邀請失敗'); }
+        }
+
+        function loadFriends() {
+            const unsub = onValue(ref(db, `users/${myUid}/friends`), (snapshot) => {
+                friendList.innerHTML = '';
+                myFriendsData = snapshot.val() || {};
+                for (const [friendUid, friendNickname] of Object.entries(myFriendsData)) {
+                    const div = document.createElement('div');
+                    div.className = 'list-item';
+                    div.innerHTML = `<div class="avatar">${friendNickname.charAt(0).toUpperCase()}</div><div class="item-name">${friendNickname}</div>`;
+                    const roomId = myUid > friendUid ? `${myUid}_${friendUid}` : `${friendUid}_${myUid}`;
+                    div.addEventListener('click', () => openChat(roomId, friendNickname, 'friend'));
+                    friendList.appendChild(div);
+                }
+            });
+            unsubscribes.push(unsub);
+        }
+
+        function loadGroups() {
+            const unsub = onValue(ref(db, `users/${myUid}/groups`), (snapshot) => {
+                groupList.innerHTML = '';
+                const groups = snapshot.val();
+                if (!groups) return;
+                for (const [groupId, groupData] of Object.entries(groups)) {
+                    const div = document.createElement('div');
+                    div.className = 'list-item';
+                    div.innerHTML = `<div class="avatar group">👥</div><div class="item-name">${groupData.name}</div>`;
+                    div.addEventListener('click', () => openChat(groupId, groupData.name, 'group'));
+                    groupList.appendChild(div);
+                }
+            });
+            unsubscribes.push(unsub);
+        }
+
+        createGroupBtn.addEventListener('click', () => {
+            groupNameInput.value = '';
+            modalOverlay.style.display = 'flex';
+        });
+
+        cancelGroupBtn.addEventListener('click', () => modalOverlay.style.display = 'none');
+
+        confirmGroupBtn.addEventListener('click', async () => {
+            const groupName = groupNameInput.value.trim();
+            if (!groupName) return alert('請輸入群組名稱');
+
+            const newGroupRef = push(ref(db, 'chats'));
+            const groupId = newGroupRef.key;
+
+            try {
+                await set(ref(db, `chats/${groupId}/info`), { 
+                    type: 'group', 
+                    name: groupName, 
+                    creatorId: myUid,
+                    members: { [myUid]: myNickname } 
+                });
+                await set(ref(db, `users/${myUid}/groups/${groupId}`), { name: groupName });
+                
+                modalOverlay.style.display = 'none';
+                alert('群組建立成功！你是群主，可進入群組邀請好友。');
+            } catch (error) { alert('建立群組失敗'); }
+        });
+
+        inviteGroupMemberBtn.addEventListener('click', () => {
+            inviteFriendList.innerHTML = '';
+            if (Object.keys(myFriendsData).length === 0) return alert('你還沒有好友！');
+            
+            for (const [friendUid, friendNickname] of Object.entries(myFriendsData)) {
+                const label = document.createElement('label');
+                label.innerHTML = `<input type="checkbox" value="${friendUid}" data-name="${friendNickname}"> ${friendNickname}`;
+                inviteFriendList.appendChild(label);
+            }
+            inviteModalOverlay.style.display = 'flex';
+        });
+
+        cancelInviteBtn.addEventListener('click', () => inviteModalOverlay.style.display = 'none');
+
+        confirmInviteBtn.addEventListener('click', async () => {
+            if (!currentChat || currentChat.type !== 'group') return;
+            
+            const selectedFriends = Array.from(inviteFriendList.querySelectorAll('input[type="checkbox"]:checked'));
+            if (selectedFriends.length === 0) return alert('請至少選擇一位好友');
+
+            const groupId = currentChat.id;
+
+            try {
+                for (const cb of selectedFriends) {
+                    const friendUid = cb.value;
+                    const friendName = cb.dataset.name;
+                    
+                    await update(ref(db, `chats/${groupId}/info/members`), { [friendUid]: friendName });
+                    await set(ref(db, `users/${friendUid}/groups/${groupId}`), { name: currentChat.name });
+                }
+                inviteModalOverlay.style.display = 'none';
+                alert('已成功邀請好友加入群組！');
+            } catch (error) {
+                console.error(error);
+                alert('邀請失敗');
+            }
+        });
+
+        clearChatBtn.addEventListener('click', async () => {
+            if (!isAdmin || !currentChat || currentChat.type !== 'public') return;
+            
+            if (confirm('⚠️ 管理員權限：確定要清空公共聊天室的所有歷史紀錄嗎？這無法復原！')) {
+                try {
+                    await remove(ref(db, `chats/public_lobby/messages`));
+                    messagesDiv.innerHTML = ''; 
+                    alert('公共聊天室紀錄已清空！');
+                } catch (error) {
+                    console.error("清空失敗:", error);
+                    alert('清空失敗，請檢查權限');
+                }
+            }
+        });
+
+        backBtn.addEventListener('click', () => {
+            chatWindow.style.display = 'none';
+            currentChat = null;
+            inviteGroupMemberBtn.style.display = 'none'; 
+            clearChatBtn.style.display = 'none';
+            if (currentChatUnsubscribe) { currentChatUnsubscribe(); currentChatUnsubscribe = null; }
+        });
+
+        function openChat(roomId, roomName, type) {
+            currentChat = { id: roomId, name: roomName, type: type };
+            chatWithName.textContent = roomName;
+            chatWindow.style.display = 'flex';
+            messagesDiv.innerHTML = '';
+
+            if (type === 'public') {
+                inviteGroupMemberBtn.style.display = 'none';
+                if (isAdmin) {
+                    clearChatBtn.style.display = 'block';
+                } else {
+                    clearChatBtn.style.display = 'none';
+                }
+            } else if (type === 'group') {
+                clearChatBtn.style.display = 'none';
+                get(ref(db, `chats/${roomId}/info`)).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const groupInfo = snapshot.val();
+                        if (groupInfo.creatorId === myUid || isAdmin) {
+                            inviteGroupMemberBtn.style.display = 'block';
+                        } else {
+                            inviteGroupMemberBtn.style.display = 'none';
+                        }
+                    }
+                });
+            } else {
+                clearChatBtn.style.display = 'none';
+                inviteGroupMemberBtn.style.display = 'none';
+            }
+
+            if (currentChatUnsubscribe) currentChatUnsubscribe();
+
+            const chatRef = ref(db, `chats/${roomId}/messages`);
+            currentChatUnsubscribe = onChildAdded(chatRef, (snapshot) => {
+                displayMessage(snapshot.key, snapshot.val());
+            });
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text || !myUid || !currentChat) return;
+            push(ref(db, `chats/${currentChat.id}/messages`), {
+                type: 'text', text: text, senderId: myUid, senderName: myNickname, timestamp: serverTimestamp()
+            }).then(() => { messageInput.value = ''; }).catch(console.error);
+        }
+
+        fileBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file || !currentChat) return;
+            let type = 'file';
+            if (file.type.startsWith('image/')) type = 'image';
+            else if (file.type.startsWith('video/')) type = 'video';
+
+            const loadingId = 'loading-' + Date.now();
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message me';
+            loadingDiv.id = loadingId;
+            loadingDiv.innerHTML = `<div class="bubble" style="background:#ddd; color:#555;">正在上傳...</div>`;
+            messagesDiv.appendChild(loadingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            try {
+                const storagePath = `chats/${currentChat.id}/${Date.now()}_${file.name}`;
+                const fileRef = storageRef(storage, storagePath);
+                await uploadBytes(fileRef, file);
+                const downloadURL = await getDownloadURL(fileRef);
+                
+                await push(ref(db, `chats/${currentChat.id}/messages`), {
+                    type: type, url: downloadURL, fileName: file.name, senderId: myUid, senderName: myNickname, timestamp: serverTimestamp()
+                });
+                loadingDiv.remove(); fileInput.value = '';
+            } catch (error) { alert('上傳失敗'); loadingDiv.remove(); fileInput.value = ''; }
+        });
+
+        function displayMessage(id, data) {
+            if (document.getElementById(`msg-${id}`)) return;
+            const isMe = data.senderId === myUid;
+            const wrapper = document.createElement('div');
+            wrapper.className = `message ${isMe ? 'me' : 'other'}`;
+            wrapper.id = `msg-${id}`;
+
+            if (isAdmin) {
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-btn';
+                delBtn.innerHTML = '✕';
+                delBtn.title = '管理員刪除訊息';
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm('管理員權限：確定要刪除這則訊息嗎？')) {
+                        remove(ref(db, `chats/${currentChat.id}/messages/${id}`));
+                        wrapper.remove();
+                    }
+                });
+                wrapper.appendChild(delBtn);
+            }
+
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+
+            if (!isMe && (currentChat.type === 'group' || currentChat.type === 'public') && data.senderName) {
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'sender-name';
+                nameDiv.textContent = data.senderName;
+                wrapper.appendChild(nameDiv);
+            }
+
+            if (data.type === 'image') {
+                const img = document.createElement('img');
+                img.src = data.url;
+                img.onclick = () => window.open(data.url, '_blank');
+                bubble.appendChild(img);
+            } else if (data.type === 'video') {
+                const video = document.createElement('video');
+                video.src = data.url; video.controls = true;
+                bubble.appendChild(video);
+            } else if (data.type === 'file') {
+                const a = document.createElement('a');
+                a.href = data.url; a.target = '_blank'; a.className = 'file-link';
+                a.innerHTML = `📄 ${data.fileName}`;
+                bubble.appendChild(a);
+            } else {
+                bubble.textContent = data.text;
+            }
+
+            const time = document.createElement('div');
+            time.className = 'time';
+            if (data.timestamp) {
+                const date = new Date(data.timestamp);
+                time.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            wrapper.appendChild(bubble);
+            wrapper.appendChild(time);
+            messagesDiv.appendChild(wrapper);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
