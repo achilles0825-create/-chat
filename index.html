@@ -50,32 +50,28 @@
         .list-item { padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
         .list-item:hover { background-color: #f0f5ff; }
         
-        /* 🌟 頭像與上線狀態點 */
         .avatar-wrapper { position: relative; flex-shrink: 0; }
         .avatar { width: 40px; height: 40px; background-color: #85e249; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 18px; }
         .avatar.group { background-color: #f39c12; }
         .avatar.public { background-color: #3498db; }
         .status-dot { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; background-color: #ccc; }
-        .status-dot.online { background-color: #2ecc71; } /* 綠色 */
-        .status-dot.offline { background-color: #95a5a6; } /* 灰色 */
+        .status-dot.online { background-color: #2ecc71; }
+        .status-dot.offline { background-color: #95a5a6; }
 
         .item-info { flex: 1; display: flex; flex-direction: column; }
         .item-name { font-size: 16px; color: #333; font-weight: bold; }
         .item-status { font-size: 12px; color: #888; }
 
-        /* 邀請通知樣式 */
         .request-item { display: flex; align-items: center; gap: 10px; padding: 10px 15px; border-bottom: 1px solid #eee; background: #fffde7; }
         .btn-accept { background: #4caf50; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; }
         .btn-reject { background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 5px; }
 
-        /* 聊天視窗 */
         #chat-window { display: none; flex-direction: column; height: 100%; position: absolute; top: 0; left: 0; width: 100%; z-index: 10; background-color: #8cabd8; }
         .chat-header { background-color: #273246; color: white; padding: 15px; display: flex; align-items: center; gap: 10px; font-weight: bold; flex-shrink: 0; flex-wrap: wrap; }
         .back-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; font-weight: bold; }
         
         .header-actions { margin-left: auto; display: flex; gap: 10px; align-items: center; }
         .invite-btn { background: #4a86e8; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; display: none; }
-        
         .clear-chat-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; display: none; }
         .clear-chat-btn:hover { background: #c0392b; }
         
@@ -98,7 +94,6 @@
         .me .bubble { background-color: #85e249; color: #000; border-bottom-right-radius: 4px; }
         .other .bubble { background-color: #ffffff; color: #000; border-bottom-left-radius: 4px; }
         
-        /* 🌟 聊天室內發送者名字與狀態 */
         .sender-info { font-size: 11px; color: #555; margin-bottom: 3px; margin-left: 5px; display: flex; align-items: center; gap: 5px; }
         .sender-status-text { font-size: 10px; }
         
@@ -111,13 +106,11 @@
         .file-link { display: flex; align-items: center; gap: 5px; color: #0056b3; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 5px; word-break: break-all; }
         .time { font-size: 11px; color: #555; margin-top: 3px; }
 
-        /* 輸入區 */
         #input-area { background-color: #f0f0f0; padding: 10px; display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
         #message-input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 15px; }
         #file-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0 5px; color: #555; }
         #send-btn { background-color: #4a86e8; color: white; border: none; border-radius: 20px; padding: 0 20px; height: 40px; font-weight: bold; cursor: pointer; }
 
-        /* 彈窗 */
         #modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 20; justify-content: center; align-items: center; }
         .modal-box { background: white; padding: 20px; border-radius: 10px; width: 85%; max-height: 80%; display: flex; flex-direction: column; }
         .modal-box h3 { margin-bottom: 15px; text-align: center; }
@@ -142,8 +135,14 @@
             請不要隨意說出你和好朋友之間的事情，除非好朋友有明確說「可以說」喔！
         </div>
 
-        <div class="input-group"><input type="text" id="nickname" placeholder="請輸入暱稱 (建議用真名)" autocomplete="off"></div>
-        <div class="input-group"><input type="password" id="password" placeholder="請輸入密碼" autocomplete="new-password"></div>
+        <div class="input-group">
+            <!-- 使用 readonly 防止自動填入 -->
+            <input type="text" id="nickname" placeholder="請輸入暱稱 (建議用真名)" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
+        </div>
+        <div class="input-group">
+            <!-- 預設為 text，點擊時才變為 password，並用 readonly 防止自動填入 -->
+            <input type="text" id="password" placeholder="請輸入密碼" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly'); this.type='password';">
+        </div>
         
         <button id="login-btn" class="btn-primary">登入</button>
         <button id="register-btn" class="btn-secondary">註冊新帳號</button>
@@ -183,7 +182,7 @@
             
             <div class="sidebar-section"><span>我的好友</span></div>
             <div class="add-friend-box">
-                <input type="text" id="add-friend-input" placeholder="輸入對方暱稱..." autocomplete="off">
+                <input type="text" id="add-friend-input" placeholder="輸入對方暱稱..." autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
                 <button id="add-friend-btn">送出邀請</button>
             </div>
             <div id="friend-list"></div>
@@ -203,7 +202,7 @@
             <div id="input-area">
                 <input type="file" id="file-input" accept="image/*,video/*,*/*" style="display: none;">
                 <button id="file-btn">📎</button>
-                <input type="text" id="message-input" placeholder="輸入訊息..." autocomplete="off">
+                <input type="text" id="message-input" placeholder="輸入訊息..." autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
                 <button id="send-btn">發送</button>
             </div>
         </div>
@@ -212,7 +211,7 @@
     <div id="modal-overlay">
         <div class="modal-box">
             <h3>建立新群組</h3>
-            <input type="text" id="group-name-input" placeholder="請輸入群組名稱..." autocomplete="off">
+            <input type="text" id="group-name-input" placeholder="請輸入群組名稱..." autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
             <p style="font-size:12px; color:#666; margin-bottom:5px;">建立後，你就是群主，可進入群組邀請好友。</p>
             <div class="modal-actions">
                 <button class="btn-cancel" id="cancel-group-btn">取消</button>
