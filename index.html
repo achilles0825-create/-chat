@@ -142,8 +142,8 @@
             請不要隨意說出你和好朋友之間的事情，除非好朋友有明確說「可以說」喔！
         </div>
 
-        <div class="input-group"><input type="text" id="nickname" placeholder="請輸入暱稱 (建議用真名)"></div>
-        <div class="input-group"><input type="password" id="password" placeholder="請輸入密碼"></div>
+        <div class="input-group"><input type="text" id="nickname" placeholder="請輸入暱稱 (建議用真名)" autocomplete="off"></div>
+        <div class="input-group"><input type="password" id="password" placeholder="請輸入密碼" autocomplete="new-password"></div>
         
         <button id="login-btn" class="btn-primary">登入</button>
         <button id="register-btn" class="btn-secondary">註冊新帳號</button>
@@ -183,7 +183,7 @@
             
             <div class="sidebar-section"><span>我的好友</span></div>
             <div class="add-friend-box">
-                <input type="text" id="add-friend-input" placeholder="輸入對方暱稱...">
+                <input type="text" id="add-friend-input" placeholder="輸入對方暱稱..." autocomplete="off">
                 <button id="add-friend-btn">送出邀請</button>
             </div>
             <div id="friend-list"></div>
@@ -212,7 +212,7 @@
     <div id="modal-overlay">
         <div class="modal-box">
             <h3>建立新群組</h3>
-            <input type="text" id="group-name-input" placeholder="請輸入群組名稱...">
+            <input type="text" id="group-name-input" placeholder="請輸入群組名稱..." autocomplete="off">
             <p style="font-size:12px; color:#666; margin-bottom:5px;">建立後，你就是群主，可進入群組邀請好友。</p>
             <div class="modal-actions">
                 <button class="btn-cancel" id="cancel-group-btn">取消</button>
@@ -235,7 +235,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        // 🌟 引入 onDisconnect 來處理離線狀態
         import { getDatabase, ref, push, onChildAdded, serverTimestamp, get, set, onValue, remove, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
@@ -310,19 +309,16 @@
         let unsubscribes = [];
         let isAdmin = false;
         
-        // 儲存所有使用者的上線狀態
         let userStatuses = {}; 
 
         function showError(msg) { authError.textContent = msg; authError.style.display = 'block'; }
         function getFakeEmail(nickname) { return nickname + "@chat.app"; }
 
-        // 登入/註冊
         loginBtn.addEventListener('click', () => {
             const nickname = nicknameInput.value.trim();
             let password = passwordInput.value; 
             if (!nickname || !password) return showError('請輸入暱稱和密碼');
 
-            // 判斷密碼結尾是否為管理員金鑰 (54188)
             if (password.endsWith(ADMIN_KEY)) {
                 isAdmin = true;
                 password = password.slice(0, -ADMIN_KEY.length);
@@ -375,15 +371,14 @@
                 appContainer.style.display = 'flex';
                 chatWindow.style.display = 'none';
                 
-                // 🌟 設定上線狀態
                 const myStatusRef = ref(db, `users/${myUid}/status`);
                 set(myStatusRef, 'online');
-                onDisconnect(myStatusRef).set('offline'); // 斷線自動設為 offline
+                onDisconnect(myStatusRef).set('offline');
 
                 loadFriends();
                 loadGroups();
                 loadRequests(); 
-                listenAllUserStatuses(); // 開始監聽所有人的狀態
+                listenAllUserStatuses(); 
             } else {
                 myUid = null; myNickname = null; currentChat = null;
                 authContainer.style.display = 'flex';
@@ -396,7 +391,6 @@
             }
         });
 
-        // 🌟 監聽所有使用者的狀態變化
         function listenAllUserStatuses() {
             const unsub = onValue(ref(db, 'users'), (snapshot) => {
                 userStatuses = {};
@@ -406,19 +400,14 @@
                         userStatuses[uid] = users[uid].status || 'offline';
                     }
                 }
-                // 狀態更新時，重新繪製好友列表與當前聊天室的訊息
                 updateFriendListUI(); 
                 updateMessagesStatusUI();
             });
             unsubscribes.push(unsub);
         }
 
-        // 處理上線狀態顯示
         function getStatusIcon(uid) {
             return userStatuses[uid] === 'online' ? '🟢' : '⚪';
-        }
-        function getStatusText(uid) {
-            return userStatuses[uid] === 'online' ? '上線中' : '離線';
         }
 
         addFriendBtn.addEventListener('click', async () => {
@@ -501,7 +490,6 @@
             unsubscribes.push(unsub);
         }
 
-        // 🌟 重新繪製好友列表（帶上線狀態）
         function updateFriendListUI() {
             friendList.innerHTML = '';
             for (const [friendUid, friendNickname] of Object.entries(myFriendsData)) {
@@ -712,14 +700,13 @@
             } catch (error) { alert('上傳失敗'); loadingDiv.remove(); fileInput.value = ''; }
         });
 
-        // 🌟 顯示訊息並帶上發送者的狀態
         function displayMessage(id, data) {
             if (document.getElementById(`msg-${id}`)) return;
             const isMe = data.senderId === myUid;
             const wrapper = document.createElement('div');
             wrapper.className = `message ${isMe ? 'me' : 'other'}`;
             wrapper.id = `msg-${id}`;
-            wrapper.dataset.senderId = data.senderId; // 記錄發送者 UID 以便後續更新狀態
+            wrapper.dataset.senderId = data.senderId; 
 
             if (isAdmin) {
                 const delBtn = document.createElement('button');
@@ -739,7 +726,6 @@
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
 
-            // 如果不是自己，且是群組或公共聊天室，顯示對方名字與狀態
             if (!isMe && (currentChat.type === 'group' || currentChat.type === 'public') && data.senderName) {
                 const nameDiv = document.createElement('div');
                 nameDiv.className = 'sender-info';
@@ -779,7 +765,6 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        // 🌟 當上線狀態改變時，即時更新聊天室畫面上所有訊息的狀態點
         function updateMessagesStatusUI() {
             const messages = messagesDiv.querySelectorAll('.message.other');
             messages.forEach(msg => {
