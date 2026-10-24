@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web 即時通訊</title>
+    <title>Web 即時通訊 - 上線狀態版</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: #7494c0; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -49,10 +49,19 @@
 
         .list-item { padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
         .list-item:hover { background-color: #f0f5ff; }
-        .avatar { width: 40px; height: 40px; background-color: #85e249; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 18px; flex-shrink: 0; }
+        
+        /* 🌟 頭像與上線狀態點 */
+        .avatar-wrapper { position: relative; flex-shrink: 0; }
+        .avatar { width: 40px; height: 40px; background-color: #85e249; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 18px; }
         .avatar.group { background-color: #f39c12; }
         .avatar.public { background-color: #3498db; }
-        .item-name { font-size: 16px; color: #333; font-weight: bold; flex: 1; }
+        .status-dot { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; background-color: #ccc; }
+        .status-dot.online { background-color: #2ecc71; } /* 綠色 */
+        .status-dot.offline { background-color: #95a5a6; } /* 灰色 */
+
+        .item-info { flex: 1; display: flex; flex-direction: column; }
+        .item-name { font-size: 16px; color: #333; font-weight: bold; }
+        .item-status { font-size: 12px; color: #888; }
 
         /* 邀請通知樣式 */
         .request-item { display: flex; align-items: center; gap: 10px; padding: 10px 15px; border-bottom: 1px solid #eee; background: #fffde7; }
@@ -88,7 +97,10 @@
         
         .me .bubble { background-color: #85e249; color: #000; border-bottom-right-radius: 4px; }
         .other .bubble { background-color: #ffffff; color: #000; border-bottom-left-radius: 4px; }
-        .sender-name { font-size: 11px; color: #555; margin-bottom: 3px; margin-left: 5px; }
+        
+        /* 🌟 聊天室內發送者名字與狀態 */
+        .sender-info { font-size: 11px; color: #555; margin-bottom: 3px; margin-left: 5px; display: flex; align-items: center; gap: 5px; }
+        .sender-status-text { font-size: 10px; }
         
         .delete-btn { position: absolute; top: 0; right: -30px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: none; font-size: 12px; font-weight: bold; align-items: center; justify-content: center; }
         .message.me .delete-btn { right: auto; left: -30px; }
@@ -155,8 +167,12 @@
 
             <div class="sidebar-section"><span>公開區域</span></div>
             <div id="public-chat-item" class="list-item" style="background: #e3f2fd; border-left: 4px solid #3498db;">
-                <div class="avatar public">🌍</div>
-                <div class="item-name">公共聊天室 (大廳)</div>
+                <div class="avatar-wrapper">
+                    <div class="avatar public">🌍</div>
+                </div>
+                <div class="item-info">
+                    <div class="item-name">公共聊天室 (大廳)</div>
+                </div>
             </div>
 
             <div class="sidebar-section">
@@ -219,7 +235,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, push, onChildAdded, serverTimestamp, get, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        // 🌟 引入 onDisconnect 來處理離線狀態
+        import { getDatabase, ref, push, onChildAdded, serverTimestamp, get, set, onValue, remove, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         const firebaseConfig = {
@@ -292,6 +309,9 @@
         let currentChatUnsubscribe = null;
         let unsubscribes = [];
         let isAdmin = false;
+        
+        // 儲存所有使用者的上線狀態
+        let userStatuses = {}; 
 
         function showError(msg) { authError.textContent = msg; authError.style.display = 'block'; }
         function getFakeEmail(nickname) { return nickname + "@chat.app"; }
@@ -302,10 +322,9 @@
             let password = passwordInput.value; 
             if (!nickname || !password) return showError('請輸入暱稱和密碼');
 
-            // 🌟 判斷密碼結尾是否為管理員金鑰 (54188)
+            // 判斷密碼結尾是否為管理員金鑰 (54188)
             if (password.endsWith(ADMIN_KEY)) {
                 isAdmin = true;
-                // 把結尾的 54188 切掉，剩下的才是真正的密碼
                 password = password.slice(0, -ADMIN_KEY.length);
             } else {
                 isAdmin = false;
@@ -323,13 +342,16 @@
             if (password.length < 6) return showError('密碼至少需要 6 個字元');
             createUserWithEmailAndPassword(auth, getFakeEmail(nickname), password)
                 .then((userCredential) => {
-                    set(ref(db, 'users/' + userCredential.user.uid), { nickname: nickname, friends: {}, groups: {}, requests: {} });
+                    set(ref(db, 'users/' + userCredential.user.uid), { nickname: nickname, friends: {}, groups: {}, requests: {}, status: 'offline' });
                 })
                 .catch(() => showError('這個暱稱已經有人使用了'));
         });
 
         logoutBtn.addEventListener('click', () => {
             isAdmin = false;
+            if (myUid) {
+                set(ref(db, `users/${myUid}/status`), 'offline');
+            }
             signOut(auth);
         });
 
@@ -353,9 +375,15 @@
                 appContainer.style.display = 'flex';
                 chatWindow.style.display = 'none';
                 
+                // 🌟 設定上線狀態
+                const myStatusRef = ref(db, `users/${myUid}/status`);
+                set(myStatusRef, 'online');
+                onDisconnect(myStatusRef).set('offline'); // 斷線自動設為 offline
+
                 loadFriends();
                 loadGroups();
                 loadRequests(); 
+                listenAllUserStatuses(); // 開始監聽所有人的狀態
             } else {
                 myUid = null; myNickname = null; currentChat = null;
                 authContainer.style.display = 'flex';
@@ -367,6 +395,31 @@
                 if (currentChatUnsubscribe) { currentChatUnsubscribe(); currentChatUnsubscribe = null; }
             }
         });
+
+        // 🌟 監聽所有使用者的狀態變化
+        function listenAllUserStatuses() {
+            const unsub = onValue(ref(db, 'users'), (snapshot) => {
+                userStatuses = {};
+                const users = snapshot.val();
+                if (users) {
+                    for (const uid in users) {
+                        userStatuses[uid] = users[uid].status || 'offline';
+                    }
+                }
+                // 狀態更新時，重新繪製好友列表與當前聊天室的訊息
+                updateFriendListUI(); 
+                updateMessagesStatusUI();
+            });
+            unsubscribes.push(unsub);
+        }
+
+        // 處理上線狀態顯示
+        function getStatusIcon(uid) {
+            return userStatuses[uid] === 'online' ? '🟢' : '⚪';
+        }
+        function getStatusText(uid) {
+            return userStatuses[uid] === 'online' ? '上線中' : '離線';
+        }
 
         addFriendBtn.addEventListener('click', async () => {
             const targetNickname = addFriendInput.value.trim();
@@ -442,18 +495,34 @@
 
         function loadFriends() {
             const unsub = onValue(ref(db, `users/${myUid}/friends`), (snapshot) => {
-                friendList.innerHTML = '';
                 myFriendsData = snapshot.val() || {};
-                for (const [friendUid, friendNickname] of Object.entries(myFriendsData)) {
-                    const div = document.createElement('div');
-                    div.className = 'list-item';
-                    div.innerHTML = `<div class="avatar">${friendNickname.charAt(0).toUpperCase()}</div><div class="item-name">${friendNickname}</div>`;
-                    const roomId = myUid > friendUid ? `${myUid}_${friendUid}` : `${friendUid}_${myUid}`;
-                    div.addEventListener('click', () => openChat(roomId, friendNickname, 'friend'));
-                    friendList.appendChild(div);
-                }
+                updateFriendListUI();
             });
             unsubscribes.push(unsub);
+        }
+
+        // 🌟 重新繪製好友列表（帶上線狀態）
+        function updateFriendListUI() {
+            friendList.innerHTML = '';
+            for (const [friendUid, friendNickname] of Object.entries(myFriendsData)) {
+                const isOnline = userStatuses[friendUid] === 'online';
+                
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <div class="avatar-wrapper">
+                        <div class="avatar">${friendNickname.charAt(0).toUpperCase()}</div>
+                        <div class="status-dot ${isOnline ? 'online' : 'offline'}"></div>
+                    </div>
+                    <div class="item-info">
+                        <div class="item-name">${friendNickname}</div>
+                        <div class="item-status">${isOnline ? '🟢 上線中' : '⚪ 離線'}</div>
+                    </div>
+                `;
+                const roomId = myUid > friendUid ? `${myUid}_${friendUid}` : `${friendUid}_${myUid}`;
+                div.addEventListener('click', () => openChat(roomId, friendNickname, 'friend'));
+                friendList.appendChild(div);
+            }
         }
 
         function loadGroups() {
@@ -464,7 +533,14 @@
                 for (const [groupId, groupData] of Object.entries(groups)) {
                     const div = document.createElement('div');
                     div.className = 'list-item';
-                    div.innerHTML = `<div class="avatar group">👥</div><div class="item-name">${groupData.name}</div>`;
+                    div.innerHTML = `
+                        <div class="avatar-wrapper">
+                            <div class="avatar group">👥</div>
+                        </div>
+                        <div class="item-info">
+                            <div class="item-name">${groupData.name}</div>
+                        </div>
+                    `;
                     div.addEventListener('click', () => openChat(groupId, groupData.name, 'group'));
                     groupList.appendChild(div);
                 }
@@ -569,11 +645,8 @@
 
             if (type === 'public') {
                 inviteGroupMemberBtn.style.display = 'none';
-                if (isAdmin) {
-                    clearChatBtn.style.display = 'block';
-                } else {
-                    clearChatBtn.style.display = 'none';
-                }
+                if (isAdmin) clearChatBtn.style.display = 'block';
+                else clearChatBtn.style.display = 'none';
             } else if (type === 'group') {
                 clearChatBtn.style.display = 'none';
                 get(ref(db, `chats/${roomId}/info`)).then((snapshot) => {
@@ -639,12 +712,14 @@
             } catch (error) { alert('上傳失敗'); loadingDiv.remove(); fileInput.value = ''; }
         });
 
+        // 🌟 顯示訊息並帶上發送者的狀態
         function displayMessage(id, data) {
             if (document.getElementById(`msg-${id}`)) return;
             const isMe = data.senderId === myUid;
             const wrapper = document.createElement('div');
             wrapper.className = `message ${isMe ? 'me' : 'other'}`;
             wrapper.id = `msg-${id}`;
+            wrapper.dataset.senderId = data.senderId; // 記錄發送者 UID 以便後續更新狀態
 
             if (isAdmin) {
                 const delBtn = document.createElement('button');
@@ -664,10 +739,12 @@
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
 
+            // 如果不是自己，且是群組或公共聊天室，顯示對方名字與狀態
             if (!isMe && (currentChat.type === 'group' || currentChat.type === 'public') && data.senderName) {
                 const nameDiv = document.createElement('div');
-                nameDiv.className = 'sender-name';
-                nameDiv.textContent = data.senderName;
+                nameDiv.className = 'sender-info';
+                const statusIcon = getStatusIcon(data.senderId);
+                nameDiv.innerHTML = `<span>${data.senderName}</span> <span class="sender-status-text">${statusIcon}</span>`;
                 wrapper.appendChild(nameDiv);
             }
 
@@ -700,6 +777,18 @@
             wrapper.appendChild(time);
             messagesDiv.appendChild(wrapper);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // 🌟 當上線狀態改變時，即時更新聊天室畫面上所有訊息的狀態點
+        function updateMessagesStatusUI() {
+            const messages = messagesDiv.querySelectorAll('.message.other');
+            messages.forEach(msg => {
+                const senderId = msg.dataset.senderId;
+                const statusSpan = msg.querySelector('.sender-status-text');
+                if (statusSpan && senderId) {
+                    statusSpan.textContent = getStatusIcon(senderId);
+                }
+            });
         }
     </script>
 </body>
