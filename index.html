@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web 即時通訊 - 上線狀態版</title>
+    <title>Web 即時通訊 - 終極完整版</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: #7494c0; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -43,11 +43,12 @@
         
         .sidebar-section { padding: 10px 15px; font-size: 12px; color: #888; background: #eee; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         
-        .add-friend-box { padding: 15px; border-bottom: 1px solid #eee; display: flex; gap: 10px; background: #f9f9f9; }
-        .add-friend-box input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; outline: none; }
+        .add-friend-box { padding: 15px; border-bottom: 1px solid #eee; display: flex; gap: 10px; background: #f9f9f9; flex-wrap: wrap; }
+        .add-friend-box input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; outline: none; min-width: 120px; }
         .add-friend-box button { padding: 10px 15px; background-color: #4a86e8; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .add-friend-box button.find-btn { background-color: #f39c12; width: 100%; margin-top: 5px; }
 
-        .list-item { padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
+        .list-item { padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; position: relative; }
         .list-item:hover { background-color: #f0f5ff; }
         
         .avatar-wrapper { position: relative; flex-shrink: 0; }
@@ -61,6 +62,9 @@
         .item-info { flex: 1; display: flex; flex-direction: column; }
         .item-name { font-size: 16px; color: #333; font-weight: bold; }
         .item-status { font-size: 12px; color: #888; }
+
+        .delete-item-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #e74c3c; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: none; font-size: 14px; font-weight: bold; align-items: center; justify-content: center; z-index: 5; }
+        .list-item:hover .delete-item-btn { display: flex; }
 
         .request-item { display: flex; align-items: center; gap: 10px; padding: 10px 15px; border-bottom: 1px solid #eee; background: #fffde7; }
         .btn-accept { background: #4caf50; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; }
@@ -100,7 +104,10 @@
         .delete-btn { position: absolute; top: 0; right: -30px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: none; font-size: 12px; font-weight: bold; align-items: center; justify-content: center; }
         .message.me .delete-btn { right: auto; left: -30px; }
         .message:hover .delete-btn { display: flex; }
-        
+
+        .kick-btn { position: absolute; top: 0; right: -60px; background: #c0392b; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: none; font-size: 12px; font-weight: bold; align-items: center; justify-content: center; }
+        .message.other:hover .kick-btn { display: flex; }
+
         .bubble img { max-width: 100%; border-radius: 8px; display: block; cursor: pointer; }
         .bubble video { max-width: 100%; border-radius: 8px; display: block; }
         .file-link { display: flex; align-items: center; gap: 5px; color: #0056b3; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 5px; word-break: break-all; }
@@ -111,16 +118,52 @@
         #file-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0 5px; color: #555; }
         #send-btn { background-color: #4a86e8; color: white; border: none; border-radius: 20px; padding: 0 20px; height: 40px; font-weight: bold; cursor: pointer; }
 
-        #modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 20; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 20px; border-radius: 10px; width: 85%; max-height: 80%; display: flex; flex-direction: column; }
-        .modal-box h3 { margin-bottom: 15px; text-align: center; }
-        .modal-box input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; }
-        .friend-checkbox-list { flex: 1; overflow-y: auto; margin-bottom: 15px; border: 1px solid #eee; border-radius: 5px; padding: 10px; }
+        /* 彈窗通用 */
+        #modal-overlay, #find-friend-modal-overlay, #delete-record-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 20; justify-content: center; align-items: center; }
+        
+        .modal-box { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            width: 90%; 
+            max-width: 350px; 
+            height: 80%; 
+            max-height: 600px; 
+            display: flex; 
+            flex-direction: column; 
+            box-sizing: border-box;
+        }
+        
+        .modal-box h3 { margin-bottom: 15px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 10px; flex-shrink: 0;}
+        .modal-box input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; flex-shrink: 0;}
+        
+        .friend-checkbox-list { 
+            flex: 1; 
+            overflow-y: auto; 
+            margin-bottom: 15px; 
+            border: 1px solid #eee; 
+            border-radius: 5px; 
+            padding: 10px; 
+            box-sizing: border-box;
+        }
+        
         .friend-checkbox-list label { display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer; border-bottom: 1px solid #f9f9f9; }
-        .modal-actions { display: flex; gap: 10px; }
+        .modal-actions { display: flex; gap: 10px; flex-shrink: 0; }
         .modal-actions button { flex: 1; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; }
         .btn-cancel { background: #ccc; color: #333; }
         .btn-confirm { background: #4a86e8; color: white; }
+        
+        /* 尋找好友列表樣式 */
+        .find-list-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; gap: 10px; }
+        .find-list-item .info { display: flex; align-items: center; gap: 10px; flex: 1; }
+        
+        /* 🌟 按鈕群組 */
+        .find-btn-group { display: flex; gap: 5px; flex-shrink: 0; }
+        .find-btn-group button { background: #3498db; color: white; border: none; padding: 8px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap;}
+        .find-btn-group button:disabled { background: #ccc; cursor: not-allowed; }
+        
+        /* 管理員專屬刪除按鈕 */
+        .admin-delete-btn { background: #e74c3c !important; }
     </style>
 </head>
 <body>
@@ -136,12 +179,10 @@
         </div>
 
         <div class="input-group">
-            <!-- 使用 readonly 防止自動填入 -->
-            <input type="text" id="nickname" placeholder="請輸入暱稱 (建議用真名)" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
+            <input type="text" id="nickname" placeholder="請輸入暱稱 (建議用真名)" autocomplete="off" spellcheck="false">
         </div>
         <div class="input-group">
-            <!-- 預設為 text，點擊時才變為 password，並用 readonly 防止自動填入 -->
-            <input type="text" id="password" placeholder="請輸入密碼" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly'); this.type='password';">
+            <input type="password" id="password" placeholder="請輸入密碼" autocomplete="new-password">
         </div>
         
         <button id="login-btn" class="btn-primary">登入</button>
@@ -181,10 +222,13 @@
             <div id="group-list"></div>
             
             <div class="sidebar-section"><span>我的好友</span></div>
+            
             <div class="add-friend-box">
-                <input type="text" id="add-friend-input" placeholder="輸入對方暱稱..." autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
+                <input type="text" id="add-friend-input" placeholder="輸入對方暱稱..." autocomplete="off">
                 <button id="add-friend-btn">送出邀請</button>
+                <button id="find-friend-btn" class="find-btn">👥 尋找玩家 (主動加好友)</button>
             </div>
+            
             <div id="friend-list"></div>
         </div>
 
@@ -194,7 +238,7 @@
                 <span id="chat-with-name">聊天對象</span>
                 
                 <div class="header-actions">
-                    <button class="clear-chat-btn" id="clear-chat-btn">🗑️ 清空紀錄</button>
+                    <button class="clear-chat-btn" id="clear-chat-btn">🗑️ 刪除紀錄</button>
                     <button class="invite-btn" id="invite-group-member-btn">➕ 邀請</button>
                 </div>
             </div>
@@ -202,7 +246,7 @@
             <div id="input-area">
                 <input type="file" id="file-input" accept="image/*,video/*,*/*" style="display: none;">
                 <button id="file-btn">📎</button>
-                <input type="text" id="message-input" placeholder="輸入訊息..." autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
+                <input type="text" id="message-input" placeholder="輸入訊息..." autocomplete="off">
                 <button id="send-btn">發送</button>
             </div>
         </div>
@@ -211,7 +255,7 @@
     <div id="modal-overlay">
         <div class="modal-box">
             <h3>建立新群組</h3>
-            <input type="text" id="group-name-input" placeholder="請輸入群組名稱..." autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
+            <input type="text" id="group-name-input" placeholder="請輸入群組名稱..." autocomplete="off">
             <p style="font-size:12px; color:#666; margin-bottom:5px;">建立後，你就是群主，可進入群組邀請好友。</p>
             <div class="modal-actions">
                 <button class="btn-cancel" id="cancel-group-btn">取消</button>
@@ -227,6 +271,28 @@
             <div class="modal-actions">
                 <button class="btn-cancel" id="cancel-invite-btn">取消</button>
                 <button class="btn-confirm" id="confirm-invite-btn">邀請</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="find-friend-modal-overlay">
+        <div class="modal-box">
+            <h3>👥 尋找玩家 <span id="total-player-count" style="font-size: 14px; color: #666; font-weight: normal;">(總人數: 0)</span></h3>
+            <div class="friend-checkbox-list" id="find-friend-list" style="padding: 0;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="cancel-find-btn">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-record-modal-overlay">
+        <div class="modal-box" style="height: auto;">
+            <h3>確認刪除紀錄</h3>
+            <p style="text-align: center; margin-bottom: 20px;">您確定要請求刪除與該好友的對話紀錄嗎？<br><span style="color: red; font-size: 12px;">（需對方同意才會徹底刪除）</span></p>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="cancel-delete-record-btn">取消</button>
+                <button class="btn-confirm" id="confirm-delete-record-btn">送出請求</button>
             </div>
         </div>
     </div>
@@ -300,15 +366,27 @@
         const cancelInviteBtn = document.getElementById('cancel-invite-btn');
         const confirmInviteBtn = document.getElementById('confirm-invite-btn');
 
+        const findFriendBtn = document.getElementById('find-friend-btn');
+        const findFriendModalOverlay = document.getElementById('find-friend-modal-overlay');
+        const findFriendList = document.getElementById('find-friend-list');
+        const cancelFindBtn = document.getElementById('cancel-find-btn');
+        const totalPlayerCount = document.getElementById('total-player-count'); 
+
+        const deleteRecordModalOverlay = document.getElementById('delete-record-modal-overlay');
+        const cancelDeleteRecordBtn = document.getElementById('cancel-delete-record-btn');
+        const confirmDeleteRecordBtn = document.getElementById('confirm-delete-record-btn');
+
         let myUid = null;
         let myNickname = null;
         let myFriendsData = {}; 
         let currentChat = null; 
         let currentChatUnsubscribe = null;
+        let currentGroupInfo = null;
         let unsubscribes = [];
         let isAdmin = false;
         
         let userStatuses = {}; 
+        let allUsersData = {}; 
 
         function showError(msg) { authError.textContent = msg; authError.style.display = 'block'; }
         function getFakeEmail(nickname) { return nickname + "@chat.app"; }
@@ -326,7 +404,14 @@
             }
 
             signInWithEmailAndPassword(auth, getFakeEmail(nickname), password)
-                .catch(() => showError('暱稱或密碼錯誤'));
+                .catch((error) => {
+                    console.error(error);
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                        showError('暱稱或密碼錯誤，請重新輸入。');
+                    } else {
+                        showError('登入失敗：' + error.message);
+                    }
+                });
         });
 
         registerBtn.addEventListener('click', () => {
@@ -339,7 +424,10 @@
                 .then((userCredential) => {
                     set(ref(db, 'users/' + userCredential.user.uid), { nickname: nickname, friends: {}, groups: {}, requests: {}, status: 'offline' });
                 })
-                .catch(() => showError('這個暱稱已經有人使用了'));
+                .catch((error) => {
+                    if (error.code === 'auth/email-already-in-use') showError('這個暱稱已經有人使用了');
+                    else showError('註冊失敗：' + error.message);
+                });
         });
 
         logoutBtn.addEventListener('click', () => {
@@ -378,6 +466,7 @@
                 loadGroups();
                 loadRequests(); 
                 listenAllUserStatuses(); 
+                listenForDeleteRequests();
             } else {
                 myUid = null; myNickname = null; currentChat = null;
                 authContainer.style.display = 'flex';
@@ -393,10 +482,10 @@
         function listenAllUserStatuses() {
             const unsub = onValue(ref(db, 'users'), (snapshot) => {
                 userStatuses = {};
-                const users = snapshot.val();
-                if (users) {
-                    for (const uid in users) {
-                        userStatuses[uid] = users[uid].status || 'offline';
+                allUsersData = snapshot.val() || {};
+                if (allUsersData) {
+                    for (const uid in allUsersData) {
+                        userStatuses[uid] = allUsersData[uid].status || 'offline';
                     }
                 }
                 updateFriendListUI(); 
@@ -408,6 +497,99 @@
         function getStatusIcon(uid) {
             return userStatuses[uid] === 'online' ? '🟢' : '⚪';
         }
+
+        findFriendBtn.addEventListener('click', () => {
+            findFriendList.innerHTML = '';
+            let hasUsers = false;
+            
+            const users = allUsersData || {};
+            const totalPlayers = Object.keys(users).length;
+            totalPlayerCount.textContent = `(總人數: ${totalPlayers})`;
+
+            for (const [uid, userData] of Object.entries(users)) {
+                if (uid === myUid) continue; 
+                hasUsers = true;
+                
+                const safeName = userData.nickname || "未知玩家";
+                const isAlreadyFriend = myFriendsData[uid] ? true : false;
+                const isOnline = userStatuses[uid] === 'online';
+                
+                const adminBtnHtml = isAdmin 
+                    ? `<button class="admin-delete-btn" data-uid="${uid}" data-name="${safeName}">🗑️ 刪除</button>` 
+                    : '';
+
+                const div = document.createElement('div');
+                div.className = 'find-list-item';
+                div.id = `find-user-${uid}`; 
+                div.innerHTML = `
+                    <div class="info">
+                        <div class="avatar-wrapper">
+                            <div class="avatar">${safeName.charAt(0).toUpperCase()}</div>
+                            <div class="status-dot ${isOnline ? 'online' : 'offline'}"></div>
+                        </div>
+                        <div>
+                            <div class="item-name">${safeName}</div>
+                            <div class="item-status">${isOnline ? '🟢 上線中' : '⚪ 離線'}</div>
+                        </div>
+                    </div>
+                    <div class="find-btn-group">
+                        <button class="add-this-friend-btn" data-uid="${uid}" data-name="${safeName}" ${isAlreadyFriend ? 'disabled' : ''}>
+                            ${isAlreadyFriend ? '✅ 已加' : '➕ 加好友'}
+                        </button>
+                        ${adminBtnHtml}
+                    </div>
+                `;
+                findFriendList.appendChild(div);
+            }
+            
+            if (!hasUsers) {
+                findFriendList.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">目前沒有其他玩家</div>';
+            }
+
+            document.querySelectorAll('.add-this-friend-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const targetUid = e.target.dataset.uid;
+                    const targetName = e.target.dataset.name;
+                    try {
+                        await set(ref(db, `users/${targetUid}/requests/${myUid}`), myNickname);
+                        alert(`已送出邀請給 ${targetName}！`);
+                        e.target.textContent = '⏳ 已送出';
+                        e.target.disabled = true;
+                    } catch (error) {
+                        alert('送出失敗');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.admin-delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const targetUid = e.target.dataset.uid;
+                    const targetName = e.target.dataset.name;
+                    
+                    if (!confirm(`⚠️ 管理員權限：確定要徹底刪除玩家「${targetName}」嗎？此操作無法復原！`)) return;
+                    
+                    try {
+                        await remove(ref(db, `users/${targetUid}`)); 
+                        alert(`已成功刪除玩家「${targetName}」`);
+                        
+                        const userDiv = document.getElementById(`find-user-${targetUid}`);
+                        if (userDiv) userDiv.remove();
+                        
+                        const currentCount = document.querySelectorAll('.find-list-item').length;
+                        totalPlayerCount.textContent = `(總人數: ${currentCount})`;
+
+                    } catch (error) {
+                        console.error(error);
+                        alert(`刪除失敗：\n${error.message}\n\n請確認 Firebase 資料庫規則是否已允許管理員寫入。`);
+                    }
+                });
+            });
+
+            findFriendModalOverlay.style.display = 'flex';
+        });
+
+        cancelFindBtn.addEventListener('click', () => findFriendModalOverlay.style.display = 'none');
+
 
         addFriendBtn.addEventListener('click', async () => {
             const targetNickname = addFriendInput.value.trim();
@@ -505,9 +687,31 @@
                         <div class="item-name">${friendNickname}</div>
                         <div class="item-status">${isOnline ? '🟢 上線中' : '⚪ 離線'}</div>
                     </div>
+                    <button class="delete-item-btn" title="刪除好友" data-uid="${friendUid}" data-name="${friendNickname}">✕</button>
                 `;
                 const roomId = myUid > friendUid ? `${myUid}_${friendUid}` : `${friendUid}_${myUid}`;
-                div.addEventListener('click', () => openChat(roomId, friendNickname, 'friend'));
+                div.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-item-btn')) return; 
+                    openChat(roomId, friendNickname, 'friend');
+                });
+                
+                const delBtn = div.querySelector('.delete-item-btn');
+                delBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm(`確定要刪除好友「${friendNickname}」嗎？`)) {
+                        if (confirm(`⚠️ 再次確認：刪除後，你們的聊天紀錄將無法復原，且需要重新加好友。確定要刪除嗎？`)) {
+                            try {
+                                await remove(ref(db, `chats/${roomId}`)); 
+                                await remove(ref(db, `users/${myUid}/friends/${friendUid}`));
+                                await remove(ref(db, `users/${friendUid}/friends/${myUid}`)); 
+                                alert('已成功刪除好友及對話紀錄。');
+                            } catch (error) {
+                                alert('刪除失敗，請檢查權限。');
+                            }
+                        }
+                    }
+                });
+                
                 friendList.appendChild(div);
             }
         }
@@ -527,8 +731,39 @@
                         <div class="item-info">
                             <div class="item-name">${groupData.name}</div>
                         </div>
+                        <button class="delete-item-btn" title="刪除/退出群組" data-gid="${groupId}" data-name="${groupData.name}">✕</button>
                     `;
-                    div.addEventListener('click', () => openChat(groupId, groupData.name, 'group'));
+                    div.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('delete-item-btn')) return;
+                        openChat(groupId, groupData.name, 'group');
+                    });
+
+                    const delBtn = div.querySelector('.delete-item-btn');
+                    delBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const isCreator = groupData.creatorId === myUid || isAdmin;
+                        
+                        if (confirm(`確定要離開並刪除群組「${groupData.name}」嗎？`)) {
+                            if (isCreator) {
+                                if (confirm(`👑 警告：你是群主！退出群組將導致該群組「直接解散」，所有成員都會被踢出。確定要解散嗎？`)) {
+                                    try {
+                                        await remove(ref(db, `chats/${groupId}`)); 
+                                        await remove(ref(db, `users/${myUid}/groups/${groupId}`)); 
+                                        alert('群組已成功解散。');
+                                    } catch (error) { alert('解散失敗'); }
+                                }
+                            } else {
+                                if (confirm(`⚠️ 再次確認：你將退出此群組，且看不到之前的對話紀錄。確定要退出嗎？`)) {
+                                    try {
+                                        await remove(ref(db, `users/${myUid}/groups/${groupId}`));
+                                        await remove(ref(db, `chats/${groupId}/info/members/${myUid}`));
+                                        alert('已成功退出群組。');
+                                    } catch (error) { alert('退出失敗'); }
+                                }
+                            }
+                        }
+                    });
+
                     groupList.appendChild(div);
                 }
             });
@@ -601,24 +836,68 @@
             }
         });
 
-        clearChatBtn.addEventListener('click', async () => {
-            if (!isAdmin || !currentChat || currentChat.type !== 'public') return;
-            
-            if (confirm('⚠️ 管理員權限：確定要清空公共聊天室的所有歷史紀錄嗎？這無法復原！')) {
-                try {
-                    await remove(ref(db, `chats/public_lobby/messages`));
-                    messagesDiv.innerHTML = ''; 
-                    alert('公共聊天室紀錄已清空！');
-                } catch (error) {
-                    console.error("清空失敗:", error);
-                    alert('清空失敗，請檢查權限');
+        clearChatBtn.addEventListener('click', () => {
+            if (currentChat.type === 'friend') {
+                deleteRecordModalOverlay.style.display = 'flex';
+            } else if (currentChat.type === 'public' && isAdmin) {
+                if (confirm('⚠️ 管理員權限：確定要清空公共聊天室的所有歷史紀錄嗎？這無法復原！')) {
+                    try {
+                        remove(ref(db, `chats/public_lobby/messages`));
+                        messagesDiv.innerHTML = ''; 
+                        alert('公共聊天室紀錄已清空！');
+                    } catch (error) { alert('清空失敗'); }
                 }
             }
         });
 
+        cancelDeleteRecordBtn.addEventListener('click', () => deleteRecordModalOverlay.style.display = 'none');
+
+        confirmDeleteRecordBtn.addEventListener('click', async () => {
+            if (!currentChat || currentChat.type !== 'friend') return;
+            
+            try {
+                await set(ref(db, `users/${currentChat.otherUid}/notifications/deleteRequest/${myUid}`), {
+                    roomId: currentChat.id,
+                    requesterName: myNickname
+                });
+                deleteRecordModalOverlay.style.display = 'none';
+                alert('已送出刪除請求，請等待對方同意。');
+            } catch (error) {
+                console.error(error);
+                alert('請求失敗');
+            }
+        });
+
+        function listenForDeleteRequests() {
+            const unsub = onValue(ref(db, `users/${myUid}/notifications/deleteRequest`), (snapshot) => {
+                const requests = snapshot.val();
+                if (!requests) return;
+
+                for (const [requesterUid, data] of Object.entries(requests)) {
+                    const roomId = data.roomId;
+                    
+                    if (confirm(`「${data.requesterName}」請求刪除你們的聊天紀錄，是否同意？`)) {
+                        remove(ref(db, `chats/${roomId}`)).then(() => {
+                            remove(ref(db, `users/${myUid}/notifications/deleteRequest/${requesterUid}`));
+                            alert('紀錄已刪除。');
+                            if (currentChat && currentChat.id === roomId) {
+                                chatWindow.style.display = 'none';
+                                currentChat = null;
+                            }
+                        });
+                    } else {
+                        remove(ref(db, `users/${myUid}/notifications/deleteRequest/${requesterUid}`));
+                        alert('已拒絕刪除請求。');
+                    }
+                }
+            });
+            unsubscribes.push(unsub);
+        }
+
         backBtn.addEventListener('click', () => {
             chatWindow.style.display = 'none';
             currentChat = null;
+            currentGroupInfo = null;
             inviteGroupMemberBtn.style.display = 'none'; 
             clearChatBtn.style.display = 'none';
             if (currentChatUnsubscribe) { currentChatUnsubscribe(); currentChatUnsubscribe = null; }
@@ -629,17 +908,28 @@
             chatWithName.textContent = roomName;
             chatWindow.style.display = 'flex';
             messagesDiv.innerHTML = '';
+            currentGroupInfo = null;
 
-            if (type === 'public') {
+            if (type === 'friend') {
+                const uids = roomId.split('_');
+                currentChat.otherUid = uids[0] === myUid ? uids[1] : uids[0];
+                clearChatBtn.style.display = 'block';
+                clearChatBtn.innerText = '🗑️ 刪除紀錄';
                 inviteGroupMemberBtn.style.display = 'none';
-                if (isAdmin) clearChatBtn.style.display = 'block';
-                else clearChatBtn.style.display = 'none';
+            } else if (type === 'public') {
+                inviteGroupMemberBtn.style.display = 'none';
+                if (isAdmin) {
+                    clearChatBtn.style.display = 'block';
+                    clearChatBtn.innerText = '🗑️ 清空紀錄';
+                } else {
+                    clearChatBtn.style.display = 'none';
+                }
             } else if (type === 'group') {
                 clearChatBtn.style.display = 'none';
                 get(ref(db, `chats/${roomId}/info`)).then((snapshot) => {
                     if (snapshot.exists()) {
-                        const groupInfo = snapshot.val();
-                        if (groupInfo.creatorId === myUid || isAdmin) {
+                        currentGroupInfo = snapshot.val(); 
+                        if (currentGroupInfo.creatorId === myUid || isAdmin) {
                             inviteGroupMemberBtn.style.display = 'block';
                         } else {
                             inviteGroupMemberBtn.style.display = 'none';
@@ -720,6 +1010,28 @@
                     }
                 });
                 wrapper.appendChild(delBtn);
+            }
+
+            if (!isMe && currentChat.type === 'group' && currentGroupInfo && (currentGroupInfo.creatorId === myUid || isAdmin)) {
+                const kickBtn = document.createElement('button');
+                kickBtn.className = 'kick-btn';
+                kickBtn.innerHTML = '🚫';
+                kickBtn.title = '將此人踢出群組';
+                kickBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm(`確定要將「${data.senderName}」踢出群組嗎？`)) {
+                        if (confirm(`⚠️ 再次確認：踢出後該成員將無法再看到此群組，且需要重新邀請。確定嗎？`)) {
+                            try {
+                                await remove(ref(db, `chats/${currentChat.id}/info/members/${data.senderId}`));
+                                await remove(ref(db, `users/${data.senderId}/groups/${currentChat.id}`));
+                                alert(`已將 ${data.senderName} 踢出群組。`);
+                            } catch (error) {
+                                alert('踢出失敗，請檢查權限。');
+                            }
+                        }
+                    }
+                });
+                wrapper.appendChild(kickBtn);
             }
 
             const bubble = document.createElement('div');
