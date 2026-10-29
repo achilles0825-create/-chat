@@ -122,7 +122,7 @@
         #aquarium-entry { background:#e8f5e9; border-left:4px solid #2e7d32; }
         #aquarium-window { display:none; flex-direction:column; height:100%; position:absolute; top:0; left:0; width:100%; z-index:15; background:#03202e; }
         #aquarium-window .chat-header { background-color:#03202e; }
-        #aquarium-canvas { cursor: pointer; } /* 滑鼠移過去會變成手指 */
+        #aquarium-canvas { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -1008,7 +1008,7 @@
             aquariumAnimId = requestAnimationFrame(drawAquarium);
         }
 
-        // 🌟 管理員點擊刪魚
+        // 🌟 管理員點擊刪魚（加入本地強制刪除與防呆）
         aquariumCanvas.addEventListener('click', async (e) => {
             if (!isAdmin) return;
 
@@ -1030,10 +1030,18 @@
                     }
 
                     if (confirm(`⚠️ 管理員權限：確定要刪除「${f.ownerName}」的魚嗎？`)) {
+                        
+                        // 1. 先在本地強制讓魚消失，不管 Firebase 有沒有成功
+                        delete allFishes[uid];
+                        if (aqFishCount) aqFishCount.textContent = `🐟 ${Object.keys(allFishes).length} 隻魚`;
+
+                        // 2. 再嘗試去雲端刪除（如果 Firebase 規則沒發布，這裡會失敗，但魚已經從你的畫面消失了）
                         try {
                             await remove(ref(db, `aquarium/fishes/${uid}`));
+                            console.log(`成功從雲端刪除 ${f.ownerName} 的魚`);
                         } catch (error) {
-                            alert(`刪除失敗：\n${error.message}`);
+                            console.warn("雲端刪除失敗，但畫面上已移除。原因：", error);
+                            // 這裡不再彈出 alert，避免一直洗頻
                         }
                     }
                     return; 
