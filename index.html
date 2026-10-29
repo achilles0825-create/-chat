@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web 即時通訊 - 終極完整版（含公共水族缸）</title>
+    <title>Web 即時通訊 - 終極完整版（含公共水族缸、餵食與自然游動）</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: #7494c0; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -14,10 +14,8 @@
         /* 登入/註冊介面 */
         #auth-container { padding: 40px 30px; justify-content: center; display: flex; flex-direction: column; }
         #auth-container h2 { text-align: center; color: #273246; margin-bottom: 10px; }
-        
         .hint-text { text-align: left; color: #d35400; font-size: 13px; line-height: 1.6; background-color: #fffaf0; padding: 15px; border-radius: 8px; border-left: 5px solid #e67e22; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .hint-text strong { color: #e67e22; font-size: 14px; }
-        
         .input-group { margin-bottom: 15px; }
         .input-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; }
         .btn-primary { width: 100%; padding: 12px; background-color: #4a86e8; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
@@ -26,8 +24,6 @@
 
         /* 主程式介面 */
         #app-container { display: none; flex-direction: column; height: 100%; }
-
-        /* 側邊欄 */
         #sidebar { background-color: #fff; height: 100%; display: flex; flex-direction: column; overflow-y: auto; }
         .sidebar-header { background-color: #273246; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; position: sticky; top: 0; z-index: 2; flex-direction: column; gap: 5px; }
         .header-top { display: flex; justify-content: space-between; width: 100%; align-items: center; }
@@ -68,7 +64,6 @@
         .header-actions { margin-left: auto; display: flex; gap: 10px; align-items: center; }
         .invite-btn { background: #4a86e8; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; display: none; }
         .clear-chat-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; display: none; }
-        .clear-chat-btn:hover { background: #c0392b; }
         
         #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
         .message { display: flex; flex-direction: column; max-width: 75%; position: relative; }
@@ -123,6 +118,7 @@
         #aquarium-window { display:none; flex-direction:column; height:100%; position:absolute; top:0; left:0; width:100%; z-index:15; background:#03202e; }
         #aquarium-window .chat-header { background-color:#03202e; }
         #aquarium-canvas { cursor: pointer; }
+        .feed-btn { background: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -211,7 +207,8 @@
                 <button class="back-btn" id="aquarium-back-btn">←</button>
                 <span>🐠 公共水族缸</span>
                 <div class="header-actions">
-                    <span id="aq-fish-count" style="font-size:12px; color:#9cf;">🐟 0 隻魚</span>
+                    <span id="aq-fish-count" style="font-size:12px; color:#9cf; margin-right:5px;">🐟 0 隻魚</span>
+                    <button id="feed-fish-btn" class="feed-btn">🍞 餵飼料</button>
                 </div>
             </div>
             <div style="flex:1; position:relative; overflow:hidden;">
@@ -284,11 +281,7 @@
         const db = getDatabase(app);
         const storage = getStorage(app);
 
-        setPersistence(auth, browserSessionPersistence).then(() => {
-            console.log("已啟用分頁獨立登入模式");
-        }).catch((error) => {
-            console.error("設定獨立登入失敗:", error);
-        });
+        setPersistence(auth, browserSessionPersistence).then(() => { console.log("已啟用分頁獨立登入模式"); }).catch((error) => { console.error("設定獨立登入失敗:", error); });
 
         const myNicknameDisplay = document.getElementById('my-nickname-display');
         const authContainer = document.getElementById('auth-container');
@@ -345,6 +338,7 @@
         const aquariumBackBtn = document.getElementById('aquarium-back-btn');
         const aquariumCanvas = document.getElementById('aquarium-canvas');
         const aqFishCount = document.getElementById('aq-fish-count');
+        const feedFishBtn = document.getElementById('feed-fish-btn');
 
         let myUid = null;
         let myNickname = null;
@@ -886,13 +880,14 @@
         }
 
         // ============================================================
-        // 🐠 公共水族缸：每人一隻魚，魚的名字 = 帳號（支援管理員刪魚）
+        // 🐠 公共水族缸：自然游動與餵食系統
         // ============================================================
         let aquariumStarted = false;
         let aquariumAnimId = null;
         let allFishes = {};              
         let aqBubbles = [];
         let aqPlants = [];
+        let aqFoods = []; // 儲存掉落的飼料
         let aquariumUnsubscribe = null;
 
         const aqCtx = aquariumCanvas.getContext('2d');
@@ -906,7 +901,7 @@
         window.addEventListener('resize', () => { if (aquariumWindow.style.display === 'flex') resizeAquarium(); });
 
         function initAquariumScene() {
-            resizeAquarium(); aqBubbles = []; aqPlants = [];
+            resizeAquarium(); aqBubbles = []; aqPlants = []; aqFoods = [];
             for (let i = 0; i < 25; i++) aqBubbles.push({ x: Math.random() * aqW, y: Math.random() * aqH, r: 2 + Math.random() * 4, s: 0.5 + Math.random() * 1.2 });
             const plantCount = 10;
             for (let i = 0; i < plantCount; i++) aqPlants.push({ x: 20 + i * (aqW - 40) / (plantCount - 1), h: 50 + Math.random() * (aqH * 0.25), phase: Math.random() * Math.PI * 2 });
@@ -918,7 +913,17 @@
                 const snap = await get(ref(db, `aquarium/fishes/${myUid}`));
                 const existing = snap.val();
                 if (!existing) {
-                    const newFish = { ownerName: myNickname, color: `hsl(${Math.random() * 360},70%,60%)`, size: 8 + Math.random() * 8, speed: 0.5 + Math.random() * 1.2, dir: Math.random() < 0.5 ? 1 : -1, phase: Math.random() * Math.PI * 2, bornAt: Date.now() };
+                    const newFish = { 
+                        ownerName: myNickname, 
+                        color: `hsl(${Math.random() * 360},70%,60%)`, 
+                        size: 8 + Math.random() * 8, 
+                        speed: 0.5 + Math.random() * 1.2, 
+                        dirX: Math.random() < 0.5 ? 1 : -1, 
+                        dirY: (Math.random() - 0.5) * 0.5, // 初始上下方向
+                        phase: Math.random() * Math.PI * 2, 
+                        turnCooldown: 0,
+                        bornAt: Date.now() 
+                    };
                     await set(ref(db, `aquarium/fishes/${myUid}`), newFish);
                 } else if (existing.ownerName !== myNickname) {
                     await update(ref(db, `aquarium/fishes/${myUid}`), { ownerName: myNickname });
@@ -935,16 +940,33 @@
                     const f = allFishes[uid]; count++;
                     if (f._x == null) f._x = Math.random() * (aqW || 300);
                     if (f._y == null) f._y = 60 + Math.random() * Math.max(1, (aqH || 300) - 140);
+                    if (f.dirY == null) f.dirY = 0;
                 }
                 if (aqFishCount) aqFishCount.textContent = `🐟 ${count} 隻魚`;
             });
         }
 
+        // 餵食按鈕事件
+        feedFishBtn.addEventListener('click', () => {
+            // 一次掉落 10 顆飼料
+            for(let i=0; i<10; i++){
+                aqFoods.push({
+                    x: Math.random() * aqW,
+                    y: -10 - Math.random() * 50,
+                    speed: 0.5 + Math.random() * 0.5,
+                    size: 3,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+        });
+
         function drawAquarium(t) {
+            // 畫背景
             const g = aqCtx.createLinearGradient(0, 0, 0, aqH);
             g.addColorStop(0, '#0a4d68'); g.addColorStop(1, '#03202e');
             aqCtx.fillStyle = g; aqCtx.fillRect(0, 0, aqW, aqH);
 
+            // 畫光線
             aqCtx.save(); aqCtx.globalAlpha = 0.08; aqCtx.fillStyle = '#aef';
             for (let i = 0; i < 5; i++) {
                 aqCtx.beginPath(); aqCtx.moveTo(aqW * 0.1 + i * aqW * 0.18, 0); aqCtx.lineTo(aqW * 0.18 + i * aqW * 0.18, 0);
@@ -952,12 +974,14 @@
             }
             aqCtx.restore();
 
+            // 畫砂
             const sg = aqCtx.createLinearGradient(0, aqH - 60, 0, aqH);
             sg.addColorStop(0, '#c2a878'); sg.addColorStop(1, '#8a7350');
             aqCtx.fillStyle = sg; aqCtx.beginPath(); aqCtx.moveTo(0, aqH - 40);
             for (let x = 0; x <= aqW; x += 50) aqCtx.lineTo(x, aqH - 40 + Math.sin(x / 70) * 8);
             aqCtx.lineTo(aqW, aqH); aqCtx.lineTo(0, aqH); aqCtx.closePath(); aqCtx.fill();
 
+            // 畫水草
             aqCtx.strokeStyle = '#2e8b57'; aqCtx.lineWidth = 6; aqCtx.lineCap = 'round';
             aqPlants.forEach(p => {
                 aqCtx.beginPath(); aqCtx.moveTo(p.x, aqH);
@@ -965,6 +989,7 @@
                 aqCtx.quadraticCurveTo(p.x + sway, aqH - p.h * 0.6, p.x + sway * 1.5, aqH - p.h); aqCtx.stroke();
             });
 
+            // 畫氣泡
             aqCtx.fillStyle = 'rgba(200,240,255,0.6)';
             aqBubbles.forEach(b => {
                 b.y -= b.s; b.x += Math.sin(t / 300 + b.y / 50) * 0.3;
@@ -972,20 +997,79 @@
                 aqCtx.beginPath(); aqCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2); aqCtx.fill();
             });
 
+            // 更新並繪製飼料
+            aqCtx.fillStyle = '#ffcc00';
+            for (let i = aqFoods.length - 1; i >= 0; i--) {
+                const food = aqFoods[i];
+                food.y += food.speed;
+                food.x += Math.sin(t / 200 + food.phase) * 0.5; // 左右飄動
+                
+                // 畫飼料
+                aqCtx.beginPath(); aqCtx.arc(food.x, food.y, food.size, 0, Math.PI * 2); aqCtx.fill();
+
+                // 如果掉到底部，就移除
+                if (food.y > aqH - 40) {
+                    aqFoods.splice(i, 1);
+                }
+            }
+
+            // 畫魚
             for (const uid in allFishes) {
                 const f = allFishes[uid];
                 if (f._x == null) f._x = Math.random() * aqW;
                 if (f._y == null) f._y = 60 + Math.random() * Math.max(1, aqH - 140);
+                if (f.dirY == null) f.dirY = 0;
+                if (f.turnCooldown == null) f.turnCooldown = 0;
 
-                f._x += (f.speed || 1) * (f.dir || 1);
-                f._y += Math.sin(t / 500 + (f.phase || 0)) * 0.5;
-                if (f._x > aqW + 40) f._x = -40;
-                if (f._x < -40) f._x = aqW + 40;
-                if (f._y < 30) f._y = 30;
-                if (f._y > aqH - 60) f._y = aqH - 60;
+                // 🎯 尋找最近的飼料（如果有）
+                let closestFood = null;
+                let minDist = 999999;
+                if (aqFoods.length > 0) {
+                    aqFoods.forEach(food => {
+                        const dist = Math.hypot(food.x - f._x, food.y - f._y);
+                        if (dist < minDist) { minDist = dist; closestFood = food; }
+                    });
+                }
 
+                // 🌟 決定移動方向
+                if (closestFood && minDist < 250) {
+                    // 有食物：朝食物游
+                    f.dirX = closestFood.x > f._x ? 1 : -1;
+                    f.dirY = closestFood.y > f._y ? 1 : -1;
+                    f._x += (f.speed || 1) * f.dirX * 1.5; // 加速
+                    f._y += (f.speed || 1) * f.dirY * 1.5;
+                    
+                    // 如果吃到食物
+                    if (minDist < (f.size || 12) + closestFood.size) {
+                        const foodIndex = aqFoods.indexOf(closestFood);
+                        if (foodIndex > -1) aqFoods.splice(foodIndex, 1);
+                        f._x += 2; // 稍微往前衝一下
+                    }
+                } else {
+                    // 沒食物：自然漫遊
+                    f.turnCooldown--;
+                    if (f.turnCooldown <= 0) {
+                        // 隨機決定轉彎機會
+                        if (Math.random() < 0.05) f.dirX *= -1; // 水平轉向
+                        if (Math.random() < 0.1) f.dirY = (Math.random() - 0.5) * 0.8; // 上下微調
+                        f.turnCooldown = 30 + Math.random() * 60; // 冷卻時間，避免抖動
+                    }
+
+                    f._x += (f.speed || 1) * f.dirX;
+                    f._y += (f.speed || 1) * f.dirY + Math.sin(t / 500 + (f.phase || 0)) * 0.5; // 加入上下波浪感
+                }
+
+                // 邊界碰撞反彈
+                if (f._x > aqW - 20) { f._x = aqW - 20; f.dirX = -1; }
+                if (f._x < 20) { f._x = 20; f.dirX = 1; }
+                if (f._y > aqH - 50) { f._y = aqH - 50; f.dirY = -Math.abs(f.dirY); }
+                if (f._y < 30) { f._y = 30; f.dirY = Math.abs(f.dirY); }
+
+                // 繪製魚身
                 const s = f.size || 12;
-                aqCtx.save(); aqCtx.translate(f._x, f._y); aqCtx.scale(f.dir || 1, 1);
+                aqCtx.save(); 
+                aqCtx.translate(f._x, f._y); 
+                aqCtx.scale(f.dirX || 1, 1); // 根據 X 方向翻轉
 
                 const tail = Math.sin(t / 150 + (f.phase || 0)) * 4;
                 aqCtx.fillStyle = f.color || '#4af';
@@ -998,6 +1082,7 @@
 
                 aqCtx.restore();
 
+                // 顯示名字
                 if (f.ownerName) {
                     aqCtx.save(); aqCtx.font = 'bold 12px sans-serif'; aqCtx.textAlign = 'center';
                     if (uid === myUid) aqCtx.fillStyle = '#ffe066';
@@ -1008,7 +1093,7 @@
             aquariumAnimId = requestAnimationFrame(drawAquarium);
         }
 
-        // 🌟 管理員點擊刪魚（加入本地強制刪除與防呆）
+        // 🌟 管理員點擊刪魚（包含本地強制刪除）
         aquariumCanvas.addEventListener('click', async (e) => {
             if (!isAdmin) return;
 
@@ -1023,25 +1108,20 @@
                 const s = f.size || 12;
                 const dist = Math.hypot(clickX - f._x, clickY - f._y);
                 
-                if (dist < s * 1.8) {
+                if (dist < s * 2.5) {
                     if (uid === myUid) {
                         alert("這是你自己的魚喔！管理員只能刪別人的魚。");
                         return;
                     }
 
                     if (confirm(`⚠️ 管理員權限：確定要刪除「${f.ownerName}」的魚嗎？`)) {
-                        
-                        // 1. 先在本地強制讓魚消失，不管 Firebase 有沒有成功
                         delete allFishes[uid];
                         if (aqFishCount) aqFishCount.textContent = `🐟 ${Object.keys(allFishes).length} 隻魚`;
 
-                        // 2. 再嘗試去雲端刪除（如果 Firebase 規則沒發布，這裡會失敗，但魚已經從你的畫面消失了）
                         try {
                             await remove(ref(db, `aquarium/fishes/${uid}`));
-                            console.log(`成功從雲端刪除 ${f.ownerName} 的魚`);
                         } catch (error) {
                             console.warn("雲端刪除失敗，但畫面上已移除。原因：", error);
-                            // 這裡不再彈出 alert，避免一直洗頻
                         }
                     }
                     return; 
