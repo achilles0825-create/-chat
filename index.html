@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web 即時通訊 - 終極完整版（含公共水族缸、餵食與自然游動）</title>
+    <title>Web 即時通訊 - 終極完整版（含公共水族缸、麵包與防卡死）</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: #7494c0; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -208,7 +208,7 @@
                 <span>🐠 公共水族缸</span>
                 <div class="header-actions">
                     <span id="aq-fish-count" style="font-size:12px; color:#9cf; margin-right:5px;">🐟 0 隻魚</span>
-                    <button id="feed-fish-btn" class="feed-btn">🍞 餵飼料</button>
+                    <button id="feed-fish-btn" class="feed-btn">🍞 丟麵包</button>
                 </div>
             </div>
             <div style="flex:1; position:relative; overflow:hidden;">
@@ -217,47 +217,11 @@
         </div>
     </div>
 
-    <div id="modal-overlay">
-        <div class="modal-box">
-            <h3>建立新群組</h3>
-            <input type="text" id="group-name-input" placeholder="請輸入群組名稱..." autocomplete="off">
-            <p style="font-size:12px; color:#666; margin-bottom:5px;">建立後，你就是群主，可進入群組邀請好友。</p>
-            <div class="modal-actions">
-                <button class="btn-cancel" id="cancel-group-btn">取消</button>
-                <button class="btn-confirm" id="confirm-group-btn">建立</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="invite-modal-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 30; justify-content: center; align-items: center;">
-        <div class="modal-box">
-            <h3>邀請好友加入群組</h3>
-            <div class="friend-checkbox-list" id="invite-friend-list"></div>
-            <div class="modal-actions">
-                <button class="btn-cancel" id="cancel-invite-btn">取消</button>
-                <button class="btn-confirm" id="confirm-invite-btn">邀請</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="find-friend-modal-overlay">
-        <div class="modal-box">
-            <h3>👥 尋找玩家 <span id="total-player-count" style="font-size: 14px; color: #666; font-weight: normal;">(總人數: 0)</span></h3>
-            <div class="friend-checkbox-list" id="find-friend-list" style="padding: 0;"></div>
-            <div class="modal-actions"><button class="btn-cancel" id="cancel-find-btn">關閉</button></div>
-        </div>
-    </div>
-
-    <div id="delete-record-modal-overlay">
-        <div class="modal-box" style="height: auto;">
-            <h3>確認刪除紀錄</h3>
-            <p style="text-align: center; margin-bottom: 20px;">您確定要請求刪除與該好友的對話紀錄嗎？<br><span style="color: red; font-size: 12px;">（需對方同意才會徹底刪除）</span></p>
-            <div class="modal-actions">
-                <button class="btn-cancel" id="cancel-delete-record-btn">取消</button>
-                <button class="btn-confirm" id="confirm-delete-record-btn">送出請求</button>
-            </div>
-        </div>
-    </div>
+    <!-- 彈窗省略以節省空間，不影響功能 -->
+    <div id="modal-overlay"><div class="modal-box"><h3>建立新群組</h3><input type="text" id="group-name-input" placeholder="請輸入群組名稱..."><div class="modal-actions"><button class="btn-cancel" id="cancel-group-btn">取消</button><button class="btn-confirm" id="confirm-group-btn">建立</button></div></div></div>
+    <div id="invite-modal-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 30; justify-content: center; align-items: center;"><div class="modal-box"><h3>邀請好友加入群組</h3><div class="friend-checkbox-list" id="invite-friend-list"></div><div class="modal-actions"><button class="btn-cancel" id="cancel-invite-btn">取消</button><button class="btn-confirm" id="confirm-invite-btn">邀請</button></div></div></div>
+    <div id="find-friend-modal-overlay"><div class="modal-box"><h3>👥 尋找玩家 <span id="total-player-count" style="font-size: 14px; color: #666; font-weight: normal;">(總人數: 0)</span></h3><div class="friend-checkbox-list" id="find-friend-list" style="padding: 0;"></div><div class="modal-actions"><button class="btn-cancel" id="cancel-find-btn">關閉</button></div></div></div>
+    <div id="delete-record-modal-overlay"><div class="modal-box" style="height: auto;"><h3>確認刪除紀錄</h3><p style="text-align: center; margin-bottom: 20px;">您確定要請求刪除與該好友的對話紀錄嗎？<br><span style="color: red; font-size: 12px;">（需對方同意才會徹底刪除）</span></p><div class="modal-actions"><button class="btn-cancel" id="cancel-delete-record-btn">取消</button><button class="btn-confirm" id="confirm-delete-record-btn">送出請求</button></div></div></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -281,7 +245,7 @@
         const db = getDatabase(app);
         const storage = getStorage(app);
 
-        setPersistence(auth, browserSessionPersistence).then(() => { console.log("已啟用分頁獨立登入模式"); }).catch((error) => { console.error("設定獨立登入失敗:", error); });
+        setPersistence(auth, browserSessionPersistence);
 
         const myNicknameDisplay = document.getElementById('my-nickname-display');
         const authContainer = document.getElementById('auth-container');
@@ -369,7 +333,6 @@
 
             signInWithEmailAndPassword(auth, getFakeEmail(nickname), password)
                 .catch((error) => {
-                    console.error(error);
                     if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                         showError('暱稱或密碼錯誤，請重新輸入。');
                     } else {
@@ -880,14 +843,14 @@
         }
 
         // ============================================================
-        // 🐠 公共水族缸：自然游動與餵食系統
+        // 🐠 公共水族缸：大麵包與自然游動防卡死
         // ============================================================
         let aquariumStarted = false;
         let aquariumAnimId = null;
         let allFishes = {};              
         let aqBubbles = [];
         let aqPlants = [];
-        let aqFoods = []; // 儲存掉落的飼料
+        let aqBread = null; // 改為單一麵包物件
         let aquariumUnsubscribe = null;
 
         const aqCtx = aquariumCanvas.getContext('2d');
@@ -901,7 +864,7 @@
         window.addEventListener('resize', () => { if (aquariumWindow.style.display === 'flex') resizeAquarium(); });
 
         function initAquariumScene() {
-            resizeAquarium(); aqBubbles = []; aqPlants = []; aqFoods = [];
+            resizeAquarium(); aqBubbles = []; aqPlants = []; aqBread = null;
             for (let i = 0; i < 25; i++) aqBubbles.push({ x: Math.random() * aqW, y: Math.random() * aqH, r: 2 + Math.random() * 4, s: 0.5 + Math.random() * 1.2 });
             const plantCount = 10;
             for (let i = 0; i < plantCount; i++) aqPlants.push({ x: 20 + i * (aqW - 40) / (plantCount - 1), h: 50 + Math.random() * (aqH * 0.25), phase: Math.random() * Math.PI * 2 });
@@ -919,7 +882,7 @@
                         size: 8 + Math.random() * 8, 
                         speed: 0.5 + Math.random() * 1.2, 
                         dirX: Math.random() < 0.5 ? 1 : -1, 
-                        dirY: (Math.random() - 0.5) * 0.5, // 初始上下方向
+                        dirY: (Math.random() - 0.5) * 0.5, 
                         phase: Math.random() * Math.PI * 2, 
                         turnCooldown: 0,
                         bornAt: Date.now() 
@@ -940,33 +903,30 @@
                     const f = allFishes[uid]; count++;
                     if (f._x == null) f._x = Math.random() * (aqW || 300);
                     if (f._y == null) f._y = 60 + Math.random() * Math.max(1, (aqH || 300) - 140);
+                    if (f.dirX == null) f.dirX = 1;
                     if (f.dirY == null) f.dirY = 0;
                 }
                 if (aqFishCount) aqFishCount.textContent = `🐟 ${count} 隻魚`;
             });
         }
 
-        // 餵食按鈕事件
+        // 🍞 丟一顆大麵包
         feedFishBtn.addEventListener('click', () => {
-            // 一次掉落 10 顆飼料
-            for(let i=0; i<10; i++){
-                aqFoods.push({
-                    x: Math.random() * aqW,
-                    y: -10 - Math.random() * 50,
-                    speed: 0.5 + Math.random() * 0.5,
-                    size: 3,
-                    phase: Math.random() * Math.PI * 2
-                });
-            }
+            if (aqBread) return; // 如果已經有麵包在掉，就不重複丟
+            aqBread = {
+                x: aqW * 0.2 + Math.random() * aqW * 0.6, // 隨機 X 座標
+                y: -30, // 從畫面上方開始掉
+                speed: 0.8, // 掉落速度
+                size: 14, // 麵包大小
+                phase: Math.random() * Math.PI * 2
+            };
         });
 
         function drawAquarium(t) {
-            // 畫背景
             const g = aqCtx.createLinearGradient(0, 0, 0, aqH);
             g.addColorStop(0, '#0a4d68'); g.addColorStop(1, '#03202e');
             aqCtx.fillStyle = g; aqCtx.fillRect(0, 0, aqW, aqH);
 
-            // 畫光線
             aqCtx.save(); aqCtx.globalAlpha = 0.08; aqCtx.fillStyle = '#aef';
             for (let i = 0; i < 5; i++) {
                 aqCtx.beginPath(); aqCtx.moveTo(aqW * 0.1 + i * aqW * 0.18, 0); aqCtx.lineTo(aqW * 0.18 + i * aqW * 0.18, 0);
@@ -974,14 +934,12 @@
             }
             aqCtx.restore();
 
-            // 畫砂
             const sg = aqCtx.createLinearGradient(0, aqH - 60, 0, aqH);
             sg.addColorStop(0, '#c2a878'); sg.addColorStop(1, '#8a7350');
             aqCtx.fillStyle = sg; aqCtx.beginPath(); aqCtx.moveTo(0, aqH - 40);
             for (let x = 0; x <= aqW; x += 50) aqCtx.lineTo(x, aqH - 40 + Math.sin(x / 70) * 8);
             aqCtx.lineTo(aqW, aqH); aqCtx.lineTo(0, aqH); aqCtx.closePath(); aqCtx.fill();
 
-            // 畫水草
             aqCtx.strokeStyle = '#2e8b57'; aqCtx.lineWidth = 6; aqCtx.lineCap = 'round';
             aqPlants.forEach(p => {
                 aqCtx.beginPath(); aqCtx.moveTo(p.x, aqH);
@@ -989,7 +947,6 @@
                 aqCtx.quadraticCurveTo(p.x + sway, aqH - p.h * 0.6, p.x + sway * 1.5, aqH - p.h); aqCtx.stroke();
             });
 
-            // 畫氣泡
             aqCtx.fillStyle = 'rgba(200,240,255,0.6)';
             aqBubbles.forEach(b => {
                 b.y -= b.s; b.x += Math.sin(t / 300 + b.y / 50) * 0.3;
@@ -997,79 +954,82 @@
                 aqCtx.beginPath(); aqCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2); aqCtx.fill();
             });
 
-            // 更新並繪製飼料
-            aqCtx.fillStyle = '#ffcc00';
-            for (let i = aqFoods.length - 1; i >= 0; i--) {
-                const food = aqFoods[i];
-                food.y += food.speed;
-                food.x += Math.sin(t / 200 + food.phase) * 0.5; // 左右飄動
+            // 繪製並更新大麵包
+            if (aqBread) {
+                aqBread.y += aqBread.speed;
+                aqBread.x += Math.sin(t / 400 + aqBread.phase) * 0.5; // 麵包左右飄動
                 
-                // 畫飼料
-                aqCtx.beginPath(); aqCtx.arc(food.x, food.y, food.size, 0, Math.PI * 2); aqCtx.fill();
+                aqCtx.font = `${aqBread.size * 2}px Arial`;
+                aqCtx.textAlign = 'center';
+                aqCtx.textBaseline = 'middle';
+                aqCtx.fillText('🍞', aqBread.x, aqBread.y);
 
-                // 如果掉到底部，就移除
-                if (food.y > aqH - 40) {
-                    aqFoods.splice(i, 1);
+                // 如果麵包掉到最底部還沒被吃掉，就讓它消失，避免卡在底部
+                if (aqBread.y > aqH - 30) {
+                    aqBread = null; 
                 }
             }
 
-            // 畫魚
             for (const uid in allFishes) {
                 const f = allFishes[uid];
                 if (f._x == null) f._x = Math.random() * aqW;
                 if (f._y == null) f._y = 60 + Math.random() * Math.max(1, aqH - 140);
+                if (f.dirX == null) f.dirX = 1;
                 if (f.dirY == null) f.dirY = 0;
                 if (f.turnCooldown == null) f.turnCooldown = 0;
 
-                // 🎯 尋找最近的飼料（如果有）
-                let closestFood = null;
-                let minDist = 999999;
-                if (aqFoods.length > 0) {
-                    aqFoods.forEach(food => {
-                        const dist = Math.hypot(food.x - f._x, food.y - f._y);
-                        if (dist < minDist) { minDist = dist; closestFood = food; }
-                    });
+                // 🎯 判斷是否追麵包
+                let isChasing = false;
+                if (aqBread) {
+                    const dist = Math.hypot(aqBread.x - f._x, aqBread.y - f._y);
+                    
+                    // 如果距離在 400 以內，就開始追
+                    if (dist < 400) {
+                        isChasing = true;
+                        f.dirX = aqBread.x > f._x ? 1 : -1;
+                        f.dirY = aqBread.y > f._y ? 1 : -1;
+                        
+                        // 加速衝刺
+                        f._x += (f.speed || 1) * f.dirX * 1.5;
+                        f._y += (f.speed || 1) * f.dirY * 1.5;
+
+                        // 吃到麵包判定
+                        if (dist < (f.size || 12) + aqBread.size) {
+                            aqBread = null; // 麵包被吃掉
+                            f.dirX *= -1; // 吃掉後華麗轉身
+                            f.turnCooldown = 50; // 進入冷卻
+                        }
+                    }
                 }
 
-                // 🌟 決定移動方向
-                if (closestFood && minDist < 250) {
-                    // 有食物：朝食物游
-                    f.dirX = closestFood.x > f._x ? 1 : -1;
-                    f.dirY = closestFood.y > f._y ? 1 : -1;
-                    f._x += (f.speed || 1) * f.dirX * 1.5; // 加速
-                    f._y += (f.speed || 1) * f.dirY * 1.5;
-                    
-                    // 如果吃到食物
-                    if (minDist < (f.size || 12) + closestFood.size) {
-                        const foodIndex = aqFoods.indexOf(closestFood);
-                        if (foodIndex > -1) aqFoods.splice(foodIndex, 1);
-                        f._x += 2; // 稍微往前衝一下
-                    }
-                } else {
-                    // 沒食物：自然漫遊
+                // 🌟 如果沒有在追麵包，就自然游動
+                if (!isChasing) {
                     f.turnCooldown--;
                     if (f.turnCooldown <= 0) {
-                        // 隨機決定轉彎機會
-                        if (Math.random() < 0.05) f.dirX *= -1; // 水平轉向
-                        if (Math.random() < 0.1) f.dirY = (Math.random() - 0.5) * 0.8; // 上下微調
-                        f.turnCooldown = 30 + Math.random() * 60; // 冷卻時間，避免抖動
+                        // 強制隨機轉向
+                        if (Math.random() < 0.1) f.dirX = Math.random() < 0.5 ? 1 : -1;
+                        if (Math.random() < 0.2) f.dirY = (Math.random() - 0.5) * 0.8;
+                        f.turnCooldown = 30 + Math.random() * 60;
                     }
 
                     f._x += (f.speed || 1) * f.dirX;
-                    f._y += (f.speed || 1) * f.dirY + Math.sin(t / 500 + (f.phase || 0)) * 0.5; // 加入上下波浪感
+                    f._y += (f.speed || 1) * f.dirY + Math.sin(t / 500 + (f.phase || 0)) * 0.5;
                 }
 
-                // 邊界碰撞反彈
-                if (f._x > aqW - 20) { f._x = aqW - 20; f.dirX = -1; }
+                // 🛡️ 邊界碰撞與防卡死反彈 (解決左上角卡住的關鍵)
+                // 如果碰到邊界，強制設定位置並將方向指向缸內
                 if (f._x < 20) { f._x = 20; f.dirX = 1; }
-                if (f._y > aqH - 50) { f._y = aqH - 50; f.dirY = -Math.abs(f.dirY); }
-                if (f._y < 30) { f._y = 30; f.dirY = Math.abs(f.dirY); }
+                if (f._x > aqW - 20) { f._x = aqW - 20; f.dirX = -1; }
+                if (f._y < 30) { f._y = 30; f.dirY = Math.abs(f.dirY) || 0.5; } // 強制往下
+                if (f._y > aqH - 50) { f._y = aqH - 50; f.dirY = -Math.abs(f.dirY) || -0.5; } // 強制往上
 
-                // 繪製魚身
+                // 確保方向不會變成 0 (避免魚完全停住)
+                if (f.dirX === 0 && f.dirY === 0) f.dirX = 1;
+
                 const s = f.size || 12;
                 aqCtx.save(); 
                 aqCtx.translate(f._x, f._y); 
-                aqCtx.scale(f.dirX || 1, 1); // 根據 X 方向翻轉
+                aqCtx.scale(f.dirX || 1, 1);
 
                 const tail = Math.sin(t / 150 + (f.phase || 0)) * 4;
                 aqCtx.fillStyle = f.color || '#4af';
@@ -1082,7 +1042,6 @@
 
                 aqCtx.restore();
 
-                // 顯示名字
                 if (f.ownerName) {
                     aqCtx.save(); aqCtx.font = 'bold 12px sans-serif'; aqCtx.textAlign = 'center';
                     if (uid === myUid) aqCtx.fillStyle = '#ffe066';
@@ -1093,7 +1052,7 @@
             aquariumAnimId = requestAnimationFrame(drawAquarium);
         }
 
-        // 🌟 管理員點擊刪魚（包含本地強制刪除）
+        // 🌟 管理員點擊刪魚
         aquariumCanvas.addEventListener('click', async (e) => {
             if (!isAdmin) return;
 
