@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web 即時通訊 - 終極完整版（含公共水族缸、麵包與防卡死）</title>
+    <title>Web 即時通訊 - 終極完整版（水族缸 + 每日餵食 + 長大）</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: #7494c0; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -118,7 +118,8 @@
         #aquarium-window { display:none; flex-direction:column; height:100%; position:absolute; top:0; left:0; width:100%; z-index:15; background:#03202e; }
         #aquarium-window .chat-header { background-color:#03202e; }
         #aquarium-canvas { cursor: pointer; }
-        .feed-btn { background: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 5px; }
+        .feed-btn { background: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 5px; transition: 0.2s; }
+        .feed-btn:disabled { background: #555; color: #999; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -208,7 +209,7 @@
                 <span>🐠 公共水族缸</span>
                 <div class="header-actions">
                     <span id="aq-fish-count" style="font-size:12px; color:#9cf; margin-right:5px;">🐟 0 隻魚</span>
-                    <button id="feed-fish-btn" class="feed-btn">🍞 丟麵包</button>
+                    <button id="feed-fish-btn" class="feed-btn">🍞 餵飼料</button>
                 </div>
             </div>
             <div style="flex:1; position:relative; overflow:hidden;">
@@ -843,15 +844,16 @@
         }
 
         // ============================================================
-        // 🐠 公共水族缸：大麵包與自然游動防卡死
+        // 🐠 公共水族缸：每日餵食、長大、自然游動
         // ============================================================
         let aquariumStarted = false;
         let aquariumAnimId = null;
         let allFishes = {};              
         let aqBubbles = [];
         let aqPlants = [];
-        let aqBread = null; // 改為單一麵包物件
+        let aqBread = null; 
         let aquariumUnsubscribe = null;
+        let myLastFedAt = 0; 
 
         const aqCtx = aquariumCanvas.getContext('2d');
         let aqW = 0, aqH = 0;
@@ -870,16 +872,43 @@
             for (let i = 0; i < plantCount; i++) aqPlants.push({ x: 20 + i * (aqW - 40) / (plantCount - 1), h: 50 + Math.random() * (aqH * 0.25), phase: Math.random() * Math.PI * 2 });
         }
 
+        // 🌟 改為判斷是否「跨日」（換日即可餵食）
+        function checkFeedCooldown() {
+            const now = new Date();
+            const lastFed = new Date(myLastFedAt);
+            
+            // 如果是在同一天（年、月、日都相同），則禁用按鈕
+            if (now.getFullYear() === lastFed.getFullYear() &&
+                now.getMonth() === lastFed.getMonth() &&
+                now.getDate() === lastFed.getDate()) {
+                feedFishBtn.disabled = true;
+                feedFishBtn.textContent = `⏳ 明天再餵`;
+            } else {
+                feedFishBtn.disabled = false;
+                feedFishBtn.textContent = '🍞 餵飼料';
+            }
+        }
+
+        // 依據出生時間計算魚的大小 (每 5 天長大 2，最大 20)
+        function calcFishSize(bornAt) {
+            if (!bornAt) return 8;
+            const daysOld = (Date.now() - bornAt) / (1000 * 60 * 60 * 24);
+            const growth = Math.floor(daysOld / 5) * 2;
+            return Math.min(8 + growth, 20);
+        }
+
         async function ensureMyFishInPublicTank() {
             if (!myUid) return;
             try {
                 const snap = await get(ref(db, `aquarium/fishes/${myUid}`));
                 const existing = snap.val();
+                
                 if (!existing) {
+                    // 第一次建立魚
                     const newFish = { 
                         ownerName: myNickname, 
                         color: `hsl(${Math.random() * 360},70%,60%)`, 
-                        size: 8 + Math.random() * 8, 
+                        size: 8, 
                         speed: 0.5 + Math.random() * 1.2, 
                         dirX: Math.random() < 0.5 ? 1 : -1, 
                         dirY: (Math.random() - 0.5) * 0.5, 
@@ -888,8 +917,15 @@
                         bornAt: Date.now() 
                     };
                     await set(ref(db, `aquarium/fishes/${myUid}`), newFish);
-                } else if (existing.ownerName !== myNickname) {
-                    await update(ref(db, `aquarium/fishes/${myUid}`), { ownerName: myNickname });
+                } else {
+                    // 更新魚名與根據天數長大
+                    const newSize = calcFishSize(existing.bornAt || Date.now());
+                    if (existing.ownerName !== myNickname || existing.size !== newSize) {
+                        await update(ref(db, `aquarium/fishes/${myUid}`), { 
+                            ownerName: myNickname,
+                            size: newSize
+                        });
+                    }
                 }
             } catch (e) { console.warn('建立/更新公共魚失敗', e); }
         }
@@ -905,22 +941,56 @@
                     if (f._y == null) f._y = 60 + Math.random() * Math.max(1, (aqH || 300) - 140);
                     if (f.dirX == null) f.dirX = 1;
                     if (f.dirY == null) f.dirY = 0;
+                    
+                    // 如果有人 5 天沒上線，他一上線時魚也要變大
+                    if (uid === myUid && f.bornAt) {
+                        f.size = calcFishSize(f.bornAt);
+                    }
                 }
                 if (aqFishCount) aqFishCount.textContent = `🐟 ${count} 隻魚`;
             });
         }
 
-        // 🍞 丟一顆大麵包
-        feedFishBtn.addEventListener('click', () => {
+        // 初始化時讀取自己的最後餵食時間
+        async function loadMyFeedTime() {
+            if (!myUid) return;
+            try {
+                const snap = await get(ref(db, `aquarium/feedLogs/${myUid}`));
+                if (snap.exists()) {
+                    myLastFedAt = snap.val().lastFedAt || 0;
+                } else {
+                    myLastFedAt = 0;
+                }
+                checkFeedCooldown();
+            } catch(e) { console.warn(e); }
+        }
+
+        // 點擊餵食按鈕
+        feedFishBtn.addEventListener('click', async () => {
+            if (feedFishBtn.disabled) return;
             if (aqBread) return; // 如果已經有麵包在掉，就不重複丟
+
+            // 1. 立刻掉落麵包
             aqBread = {
-                x: aqW * 0.2 + Math.random() * aqW * 0.6, // 隨機 X 座標
-                y: -30, // 從畫面上方開始掉
-                speed: 0.8, // 掉落速度
-                size: 14, // 麵包大小
+                x: aqW * 0.2 + Math.random() * aqW * 0.6,
+                y: -30, 
+                speed: 0.8, 
+                size: 14, 
                 phase: Math.random() * Math.PI * 2
             };
+
+            // 2. 記錄時間到 Firebase
+            const now = Date.now();
+            myLastFedAt = now;
+            checkFeedCooldown(); // 立刻更新按鈕成灰色
+
+            try {
+                await set(ref(db, `aquarium/feedLogs/${myUid}`), { lastFedAt: now });
+            } catch(e) { console.warn("無法記錄餵食時間", e); }
         });
+
+        // 計時器，每分鐘更新一次按鈕冷卻狀態
+        setInterval(checkFeedCooldown, 60000);
 
         function drawAquarium(t) {
             const g = aqCtx.createLinearGradient(0, 0, 0, aqH);
@@ -957,17 +1027,14 @@
             // 繪製並更新大麵包
             if (aqBread) {
                 aqBread.y += aqBread.speed;
-                aqBread.x += Math.sin(t / 400 + aqBread.phase) * 0.5; // 麵包左右飄動
+                aqBread.x += Math.sin(t / 400 + aqBread.phase) * 0.5;
                 
                 aqCtx.font = `${aqBread.size * 2}px Arial`;
                 aqCtx.textAlign = 'center';
                 aqCtx.textBaseline = 'middle';
                 aqCtx.fillText('🍞', aqBread.x, aqBread.y);
 
-                // 如果麵包掉到最底部還沒被吃掉，就讓它消失，避免卡在底部
-                if (aqBread.y > aqH - 30) {
-                    aqBread = null; 
-                }
+                if (aqBread.y > aqH - 30) aqBread = null; 
             }
 
             for (const uid in allFishes) {
@@ -978,35 +1045,28 @@
                 if (f.dirY == null) f.dirY = 0;
                 if (f.turnCooldown == null) f.turnCooldown = 0;
 
-                // 🎯 判斷是否追麵包
                 let isChasing = false;
                 if (aqBread) {
                     const dist = Math.hypot(aqBread.x - f._x, aqBread.y - f._y);
-                    
-                    // 如果距離在 400 以內，就開始追
                     if (dist < 400) {
                         isChasing = true;
                         f.dirX = aqBread.x > f._x ? 1 : -1;
                         f.dirY = aqBread.y > f._y ? 1 : -1;
                         
-                        // 加速衝刺
                         f._x += (f.speed || 1) * f.dirX * 1.5;
                         f._y += (f.speed || 1) * f.dirY * 1.5;
 
-                        // 吃到麵包判定
                         if (dist < (f.size || 12) + aqBread.size) {
-                            aqBread = null; // 麵包被吃掉
-                            f.dirX *= -1; // 吃掉後華麗轉身
-                            f.turnCooldown = 50; // 進入冷卻
+                            aqBread = null;
+                            f.dirX *= -1;
+                            f.turnCooldown = 50;
                         }
                     }
                 }
 
-                // 🌟 如果沒有在追麵包，就自然游動
                 if (!isChasing) {
                     f.turnCooldown--;
                     if (f.turnCooldown <= 0) {
-                        // 強制隨機轉向
                         if (Math.random() < 0.1) f.dirX = Math.random() < 0.5 ? 1 : -1;
                         if (Math.random() < 0.2) f.dirY = (Math.random() - 0.5) * 0.8;
                         f.turnCooldown = 30 + Math.random() * 60;
@@ -1016,14 +1076,11 @@
                     f._y += (f.speed || 1) * f.dirY + Math.sin(t / 500 + (f.phase || 0)) * 0.5;
                 }
 
-                // 🛡️ 邊界碰撞與防卡死反彈 (解決左上角卡住的關鍵)
-                // 如果碰到邊界，強制設定位置並將方向指向缸內
+                // 防卡死反彈
                 if (f._x < 20) { f._x = 20; f.dirX = 1; }
                 if (f._x > aqW - 20) { f._x = aqW - 20; f.dirX = -1; }
-                if (f._y < 30) { f._y = 30; f.dirY = Math.abs(f.dirY) || 0.5; } // 強制往下
-                if (f._y > aqH - 50) { f._y = aqH - 50; f.dirY = -Math.abs(f.dirY) || -0.5; } // 強制往上
-
-                // 確保方向不會變成 0 (避免魚完全停住)
+                if (f._y < 30) { f._y = 30; f.dirY = Math.abs(f.dirY) || 0.5; }
+                if (f._y > aqH - 50) { f._y = aqH - 50; f.dirY = -Math.abs(f.dirY) || -0.5; }
                 if (f.dirX === 0 && f.dirY === 0) f.dirX = 1;
 
                 const s = f.size || 12;
@@ -1052,10 +1109,8 @@
             aquariumAnimId = requestAnimationFrame(drawAquarium);
         }
 
-        // 🌟 管理員點擊刪魚
         aquariumCanvas.addEventListener('click', async (e) => {
             if (!isAdmin) return;
-
             const rect = aquariumCanvas.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
@@ -1063,25 +1118,15 @@
             for (const uid in allFishes) {
                 const f = allFishes[uid];
                 if (f._x == null || f._y == null) continue;
-
                 const s = f.size || 12;
                 const dist = Math.hypot(clickX - f._x, clickY - f._y);
                 
                 if (dist < s * 2.5) {
-                    if (uid === myUid) {
-                        alert("這是你自己的魚喔！管理員只能刪別人的魚。");
-                        return;
-                    }
-
+                    if (uid === myUid) { alert("這是你自己的魚喔！管理員只能刪別人的魚。"); return; }
                     if (confirm(`⚠️ 管理員權限：確定要刪除「${f.ownerName}」的魚嗎？`)) {
                         delete allFishes[uid];
                         if (aqFishCount) aqFishCount.textContent = `🐟 ${Object.keys(allFishes).length} 隻魚`;
-
-                        try {
-                            await remove(ref(db, `aquarium/fishes/${uid}`));
-                        } catch (error) {
-                            console.warn("雲端刪除失敗，但畫面上已移除。原因：", error);
-                        }
+                        try { await remove(ref(db, `aquarium/fishes/${uid}`)); } catch (error) { console.warn(error); }
                     }
                     return; 
                 }
@@ -1094,6 +1139,7 @@
             else { resizeAquarium(); }
             await ensureMyFishInPublicTank();
             listenPublicTank();
+            loadMyFeedTime(); // 載入餵食冷卻時間
             if (!aquariumAnimId) drawAquarium(0);
         }
 
