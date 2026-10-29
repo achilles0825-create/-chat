@@ -15,14 +15,7 @@
         #auth-container { padding: 40px 30px; justify-content: center; display: flex; flex-direction: column; }
         #auth-container h2 { text-align: center; color: #273246; margin-bottom: 10px; }
         
-        .hint-text { 
-            text-align: left; color: #d35400; font-size: 13px; 
-            line-height: 1.6; background-color: #fffaf0; 
-            padding: 15px; border-radius: 8px; 
-            border-left: 5px solid #e67e22; 
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+        .hint-text { text-align: left; color: #d35400; font-size: 13px; line-height: 1.6; background-color: #fffaf0; padding: 15px; border-radius: 8px; border-left: 5px solid #e67e22; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .hint-text strong { color: #e67e22; font-size: 14px; }
         
         .input-group { margin-bottom: 15px; }
@@ -38,9 +31,7 @@
         #sidebar { background-color: #fff; height: 100%; display: flex; flex-direction: column; overflow-y: auto; }
         .sidebar-header { background-color: #273246; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; position: sticky; top: 0; z-index: 2; flex-direction: column; gap: 5px; }
         .header-top { display: flex; justify-content: space-between; width: 100%; align-items: center; }
-        
         .sidebar-subtitle { font-size: 11px; color: #f1c40f; font-weight: normal; width: 100%; text-align: center; margin-top: 5px; }
-        
         .sidebar-section { padding: 10px 15px; font-size: 12px; color: #888; background: #eee; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         
         .add-friend-box { padding: 15px; border-bottom: 1px solid #eee; display: flex; gap: 10px; background: #f9f9f9; flex-wrap: wrap; }
@@ -84,17 +75,7 @@
         .message.me { align-self: flex-end; align-items: flex-end; }
         .message.other { align-self: flex-start; align-items: flex-start; }
         
-        .bubble { 
-            padding: 10px 15px; 
-            border-radius: 18px; 
-            font-size: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 5px; 
-            word-break: break-all;
-            white-space: pre-wrap;
-        }
-        
+        .bubble { padding: 10px 15px; border-radius: 18px; font-size: 15px; display: flex; flex-direction: column; gap: 5px; word-break: break-all; white-space: pre-wrap; }
         .me .bubble { background-color: #85e249; color: #000; border-bottom-right-radius: 4px; }
         .other .bubble { background-color: #ffffff; color: #000; border-bottom-left-radius: 4px; }
         
@@ -120,76 +101,42 @@
 
         /* 彈窗通用 */
         #modal-overlay, #find-friend-modal-overlay, #delete-record-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 20; justify-content: center; align-items: center; }
-        
-        .modal-box { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 10px; 
-            width: 90%; 
-            max-width: 350px; 
-            height: 80%; 
-            max-height: 600px; 
-            display: flex; 
-            flex-direction: column; 
-            box-sizing: border-box;
-        }
-        
+        .modal-box { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 350px; height: 80%; max-height: 600px; display: flex; flex-direction: column; box-sizing: border-box; }
         .modal-box h3 { margin-bottom: 15px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 10px; flex-shrink: 0;}
         .modal-box input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; flex-shrink: 0;}
-        
-        .friend-checkbox-list { 
-            flex: 1; 
-            overflow-y: auto; 
-            margin-bottom: 15px; 
-            border: 1px solid #eee; 
-            border-radius: 5px; 
-            padding: 10px; 
-            box-sizing: border-box;
-        }
-        
+        .friend-checkbox-list { flex: 1; overflow-y: auto; margin-bottom: 15px; border: 1px solid #eee; border-radius: 5px; padding: 10px; box-sizing: border-box; }
         .friend-checkbox-list label { display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer; border-bottom: 1px solid #f9f9f9; }
         .modal-actions { display: flex; gap: 10px; flex-shrink: 0; }
         .modal-actions button { flex: 1; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; }
         .btn-cancel { background: #ccc; color: #333; }
         .btn-confirm { background: #4a86e8; color: white; }
         
-        /* 尋找好友列表樣式 */
         .find-list-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; gap: 10px; }
         .find-list-item .info { display: flex; align-items: center; gap: 10px; flex: 1; }
-        
-        /* 🌟 按鈕群組 */
         .find-btn-group { display: flex; gap: 5px; flex-shrink: 0; }
         .find-btn-group button { background: #3498db; color: white; border: none; padding: 8px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap;}
         .find-btn-group button:disabled { background: #ccc; cursor: not-allowed; }
-        
-        /* 管理員專屬刪除按鈕 */
         .admin-delete-btn { background: #e74c3c !important; }
 
         /* 🌟 水族缸入口與畫面 */
         #aquarium-entry { background:#e8f5e9; border-left:4px solid #2e7d32; }
         #aquarium-window { display:none; flex-direction:column; height:100%; position:absolute; top:0; left:0; width:100%; z-index:15; background:#03202e; }
         #aquarium-window .chat-header { background-color:#03202e; }
+        #aquarium-canvas { cursor: pointer; } /* 滑鼠移過去會變成手指 */
     </style>
 </head>
 <body>
 
     <div id="auth-container" class="container">
         <h2>歡迎來到通訊軟體</h2>
-        
         <div class="hint-text">
             <strong>💡 溫馨小提醒：</strong><br>
             如果可以的話，請盡量使用「真名」註冊，因為這樣可以交到更多好朋友！<br><br>
             <span style="color: #c0392b;">🔒 隱私提醒：</span><br>
             請不要隨意說出你和好朋友之間的事情，除非好朋友有明確說「可以說」喔！
         </div>
-
-        <div class="input-group">
-            <input type="text" id="nickname" placeholder="請輸入暱稱 (建議用真名)" autocomplete="off" spellcheck="false">
-        </div>
-        <div class="input-group">
-            <input type="password" id="password" placeholder="請輸入密碼" autocomplete="new-password">
-        </div>
-        
+        <div class="input-group"><input type="text" id="nickname" placeholder="請輸入暱稱 (建議用真名)" autocomplete="off" spellcheck="false"></div>
+        <div class="input-group"><input type="password" id="password" placeholder="請輸入密碼" autocomplete="new-password"></div>
         <button id="login-btn" class="btn-primary">登入</button>
         <button id="register-btn" class="btn-secondary">註冊新帳號</button>
         <div id="auth-error"></div>
@@ -212,19 +159,13 @@
 
             <div class="sidebar-section"><span>公開區域</span></div>
             <div id="public-chat-item" class="list-item" style="background: #e3f2fd; border-left: 4px solid #3498db;">
-                <div class="avatar-wrapper">
-                    <div class="avatar public">🌍</div>
-                </div>
-                <div class="item-info">
-                    <div class="item-name">公共聊天室 (大廳)</div>
-                </div>
+                <div class="avatar-wrapper"><div class="avatar public">🌍</div></div>
+                <div class="item-info"><div class="item-name">公共聊天室 (大廳)</div></div>
             </div>
 
             <!-- 🐠 公共水族缸入口 -->
             <div id="aquarium-entry" class="list-item">
-                <div class="avatar-wrapper">
-                    <div class="avatar" style="background:#2e7d32;">🐠</div>
-                </div>
+                <div class="avatar-wrapper"><div class="avatar" style="background:#2e7d32;">🐠</div></div>
                 <div class="item-info">
                     <div class="item-name">公共水族缸</div>
                     <div class="item-status">每個人都有一隻魚</div>
@@ -238,13 +179,11 @@
             <div id="group-list"></div>
             
             <div class="sidebar-section"><span>我的好友</span></div>
-            
             <div class="add-friend-box">
                 <input type="text" id="add-friend-input" placeholder="輸入對方暱稱..." autocomplete="off">
                 <button id="add-friend-btn">送出邀請</button>
                 <button id="find-friend-btn" class="find-btn">👥 尋找玩家 (主動加好友)</button>
             </div>
-            
             <div id="friend-list"></div>
         </div>
 
@@ -252,7 +191,6 @@
             <div class="chat-header">
                 <button class="back-btn" id="back-btn">←</button>
                 <span id="chat-with-name">聊天對象</span>
-                
                 <div class="header-actions">
                     <button class="clear-chat-btn" id="clear-chat-btn">🗑️ 刪除紀錄</button>
                     <button class="invite-btn" id="invite-group-member-btn">➕ 邀請</button>
@@ -308,11 +246,8 @@
     <div id="find-friend-modal-overlay">
         <div class="modal-box">
             <h3>👥 尋找玩家 <span id="total-player-count" style="font-size: 14px; color: #666; font-weight: normal;">(總人數: 0)</span></h3>
-            <div class="friend-checkbox-list" id="find-friend-list" style="padding: 0;">
-            </div>
-            <div class="modal-actions">
-                <button class="btn-cancel" id="cancel-find-btn">關閉</button>
-            </div>
+            <div class="friend-checkbox-list" id="find-friend-list" style="padding: 0;"></div>
+            <div class="modal-actions"><button class="btn-cancel" id="cancel-find-btn">關閉</button></div>
         </div>
     </div>
 
@@ -344,7 +279,6 @@
         };
 
         const ADMIN_KEY = "54188";
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
@@ -406,7 +340,6 @@
         const cancelDeleteRecordBtn = document.getElementById('cancel-delete-record-btn');
         const confirmDeleteRecordBtn = document.getElementById('confirm-delete-record-btn');
 
-        // 🐠 水族缸元素
         const aquariumEntry = document.getElementById('aquarium-entry');
         const aquariumWindow = document.getElementById('aquarium-window');
         const aquariumBackBtn = document.getElementById('aquarium-back-btn');
@@ -469,15 +402,11 @@
 
         logoutBtn.addEventListener('click', () => {
             isAdmin = false;
-            if (myUid) {
-                set(ref(db, `users/${myUid}/status`), 'offline');
-            }
+            if (myUid) set(ref(db, `users/${myUid}/status`), 'offline');
             signOut(auth);
         });
 
-        publicChatItem.addEventListener('click', () => {
-            openChat('public_lobby', '🌍 公共聊天室', 'public');
-        });
+        publicChatItem.addEventListener('click', () => openChat('public_lobby', '🌍 公共聊天室', 'public'));
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -489,6 +418,7 @@
                     myNicknameDisplay.style.color = '#f1c40f';
                 } else {
                     myNicknameDisplay.textContent = `👤 ${myNickname}`;
+                    myNicknameDisplay.style.color = '#fff';
                 }
                 
                 authContainer.style.display = 'none';
@@ -500,11 +430,7 @@
                 set(myStatusRef, 'online');
                 onDisconnect(myStatusRef).set('offline');
 
-                loadFriends();
-                loadGroups();
-                loadRequests(); 
-                listenAllUserStatuses(); 
-                listenForDeleteRequests();
+                loadFriends(); loadGroups(); loadRequests(); listenAllUserStatuses(); listenForDeleteRequests();
             } else {
                 myUid = null; myNickname = null; currentChat = null;
                 authContainer.style.display = 'flex';
@@ -524,39 +450,28 @@
                 userStatuses = {};
                 allUsersData = snapshot.val() || {};
                 if (allUsersData) {
-                    for (const uid in allUsersData) {
-                        userStatuses[uid] = allUsersData[uid].status || 'offline';
-                    }
+                    for (const uid in allUsersData) userStatuses[uid] = allUsersData[uid].status || 'offline';
                 }
-                updateFriendListUI(); 
-                updateMessagesStatusUI();
+                updateFriendListUI(); updateMessagesStatusUI();
             });
             unsubscribes.push(unsub);
         }
 
-        function getStatusIcon(uid) {
-            return userStatuses[uid] === 'online' ? '🟢' : '⚪';
-        }
+        function getStatusIcon(uid) { return userStatuses[uid] === 'online' ? '🟢' : '⚪'; }
 
         findFriendBtn.addEventListener('click', () => {
             findFriendList.innerHTML = '';
             let hasUsers = false;
-            
             const users = allUsersData || {};
-            const totalPlayers = Object.keys(users).length;
-            totalPlayerCount.textContent = `(總人數: ${totalPlayers})`;
+            totalPlayerCount.textContent = `(總人數: ${Object.keys(users).length})`;
 
             for (const [uid, userData] of Object.entries(users)) {
                 if (uid === myUid) continue; 
                 hasUsers = true;
-                
                 const safeName = userData.nickname || "未知玩家";
                 const isAlreadyFriend = myFriendsData[uid] ? true : false;
                 const isOnline = userStatuses[uid] === 'online';
-                
-                const adminBtnHtml = isAdmin 
-                    ? `<button class="admin-delete-btn" data-uid="${uid}" data-name="${safeName}">🗑️ 刪除</button>` 
-                    : '';
+                const adminBtnHtml = isAdmin ? `<button class="admin-delete-btn" data-uid="${uid}" data-name="${safeName}">🗑️ 刪除</button>` : '';
 
                 const div = document.createElement('div');
                 div.className = 'find-list-item';
@@ -581,56 +496,36 @@
                 `;
                 findFriendList.appendChild(div);
             }
-            
-            if (!hasUsers) {
-                findFriendList.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">目前沒有其他玩家</div>';
-            }
+            if (!hasUsers) findFriendList.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">目前沒有其他玩家</div>';
 
             document.querySelectorAll('.add-this-friend-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
-                    const targetUid = e.target.dataset.uid;
-                    const targetName = e.target.dataset.name;
+                    const targetUid = e.target.dataset.uid; const targetName = e.target.dataset.name;
                     try {
                         await set(ref(db, `users/${targetUid}/requests/${myUid}`), myNickname);
-                        alert(`已送出邀請給 ${targetName}！`);
-                        e.target.textContent = '⏳ 已送出';
-                        e.target.disabled = true;
-                    } catch (error) {
-                        alert('送出失敗');
-                    }
+                        alert(`已送出邀請給 ${targetName}！`); e.target.textContent = '⏳ 已送出'; e.target.disabled = true;
+                    } catch (error) { alert('送出失敗'); }
                 });
             });
 
             document.querySelectorAll('.admin-delete-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
-                    const targetUid = e.target.dataset.uid;
-                    const targetName = e.target.dataset.name;
-                    
+                    const targetUid = e.target.dataset.uid; const targetName = e.target.dataset.name;
                     if (!confirm(`⚠️ 管理員權限：確定要徹底刪除玩家「${targetName}」嗎？此操作無法復原！`)) return;
-                    
                     try {
                         await remove(ref(db, `users/${targetUid}`)); 
                         await remove(ref(db, `aquarium/fishes/${targetUid}`));
                         alert(`已成功刪除玩家「${targetName}」`);
-                        
                         const userDiv = document.getElementById(`find-user-${targetUid}`);
                         if (userDiv) userDiv.remove();
-                        
-                        const currentCount = document.querySelectorAll('.find-list-item').length;
-                        totalPlayerCount.textContent = `(總人數: ${currentCount})`;
-
-                    } catch (error) {
-                        console.error(error);
-                        alert(`刪除失敗：\n${error.message}\n\n請確認 Firebase 資料庫規則是否已允許管理員寫入。`);
-                    }
+                        totalPlayerCount.textContent = `(總人數: ${document.querySelectorAll('.find-list-item').length})`;
+                    } catch (error) { alert(`刪除失敗：\n${error.message}`); }
                 });
             });
-
             findFriendModalOverlay.style.display = 'flex';
         });
 
         cancelFindBtn.addEventListener('click', () => findFriendModalOverlay.style.display = 'none');
-
 
         addFriendBtn.addEventListener('click', async () => {
             const targetNickname = addFriendInput.value.trim();
@@ -646,7 +541,6 @@
                 }
                 if (!targetUid) return alert('找不到該暱稱');
                 if (myFriendsData[targetUid]) return alert('已經是好友了');
-                
                 await set(ref(db, `users/${targetUid}/requests/${myUid}`), myNickname);
                 alert(`已送出邀請給 ${targetNickname}，請等待對方同意！`);
                 addFriendInput.value = '';
@@ -657,14 +551,8 @@
             const unsub = onValue(ref(db, `users/${myUid}/requests`), (snapshot) => {
                 requestList.innerHTML = '';
                 const requests = snapshot.val();
-                
-                if (!requests || Object.keys(requests).length === 0) {
-                    requestSection.style.display = 'none';
-                    return;
-                }
-
+                if (!requests || Object.keys(requests).length === 0) { requestSection.style.display = 'none'; return; }
                 requestSection.style.display = 'block';
-
                 for (const [requesterUid, requesterNickname] of Object.entries(requests)) {
                     const div = document.createElement('div');
                     div.className = 'request-item';
@@ -676,32 +564,22 @@
                     `;
                     requestList.appendChild(div);
                 }
-
                 document.querySelectorAll('.btn-accept').forEach(btn => {
                     btn.addEventListener('click', async (e) => {
-                        const requesterUid = e.target.dataset.uid;
-                        const requesterName = e.target.dataset.name;
-                        await acceptRequest(requesterUid, requesterName);
+                        const rUid = e.target.dataset.uid; const rName = e.target.dataset.name;
+                        try {
+                            await set(ref(db, `users/${myUid}/friends/${rUid}`), rName);
+                            await set(ref(db, `users/${rUid}/friends/${myUid}`), myNickname);
+                            await remove(ref(db, `users/${myUid}/requests/${rUid}`));
+                            alert('已成為好友！');
+                        } catch (error) { alert('接受邀請失敗'); }
                     });
                 });
-
                 document.querySelectorAll('.btn-reject').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const requesterUid = e.target.dataset.uid;
-                        await remove(ref(db, `users/${myUid}/requests/${requesterUid}`));
-                    });
+                    btn.addEventListener('click', async (e) => remove(ref(db, `users/${myUid}/requests/${e.target.dataset.uid}`)));
                 });
             });
             unsubscribes.push(unsub);
-        }
-
-        async function acceptRequest(requesterUid, requesterName) {
-            try {
-                await set(ref(db, `users/${myUid}/friends/${requesterUid}`), requesterName);
-                await set(ref(db, `users/${requesterUid}/friends/${myUid}`), myNickname);
-                await remove(ref(db, `users/${myUid}/requests/${requesterUid}`));
-                alert('已成為好友！');
-            } catch (error) { alert('接受邀請失敗'); }
         }
 
         function loadFriends() {
@@ -716,7 +594,6 @@
             friendList.innerHTML = '';
             for (const [friendUid, friendNickname] of Object.entries(myFriendsData)) {
                 const isOnline = userStatuses[friendUid] === 'online';
-                
                 const div = document.createElement('div');
                 div.className = 'list-item';
                 div.innerHTML = `
@@ -735,24 +612,19 @@
                     if (e.target.classList.contains('delete-item-btn')) return; 
                     openChat(roomId, friendNickname, 'friend');
                 });
-                
-                const delBtn = div.querySelector('.delete-item-btn');
-                delBtn.addEventListener('click', async (e) => {
+                div.querySelector('.delete-item-btn').addEventListener('click', async (e) => {
                     e.stopPropagation();
                     if (confirm(`確定要刪除好友「${friendNickname}」嗎？`)) {
-                        if (confirm(`⚠️ 再次確認：刪除後，你們的聊天紀錄將無法復原，且需要重新加好友。確定要刪除嗎？`)) {
+                        if (confirm(`⚠️ 再次確認：刪除後聊天紀錄將無法復原，且需要重新加好友。確定嗎？`)) {
                             try {
                                 await remove(ref(db, `chats/${roomId}`)); 
                                 await remove(ref(db, `users/${myUid}/friends/${friendUid}`));
                                 await remove(ref(db, `users/${friendUid}/friends/${myUid}`)); 
                                 alert('已成功刪除好友及對話紀錄。');
-                            } catch (error) {
-                                alert('刪除失敗，請檢查權限。');
-                            }
+                            } catch (error) { alert('刪除失敗'); }
                         }
                     }
                 });
-                
                 friendList.appendChild(div);
             }
         }
@@ -766,83 +638,61 @@
                     const div = document.createElement('div');
                     div.className = 'list-item';
                     div.innerHTML = `
-                        <div class="avatar-wrapper">
-                            <div class="avatar group">👥</div>
-                        </div>
-                        <div class="item-info">
-                            <div class="item-name">${groupData.name}</div>
-                        </div>
+                        <div class="avatar-wrapper"><div class="avatar group">👥</div></div>
+                        <div class="item-info"><div class="item-name">${groupData.name}</div></div>
                         <button class="delete-item-btn" title="刪除/退出群組" data-gid="${groupId}" data-name="${groupData.name}">✕</button>
                     `;
                     div.addEventListener('click', (e) => {
                         if (e.target.classList.contains('delete-item-btn')) return;
                         openChat(groupId, groupData.name, 'group');
                     });
-
-                    const delBtn = div.querySelector('.delete-item-btn');
-                    delBtn.addEventListener('click', async (e) => {
+                    div.querySelector('.delete-item-btn').addEventListener('click', async (e) => {
                         e.stopPropagation();
                         const isCreator = groupData.creatorId === myUid || isAdmin;
-                        
                         if (confirm(`確定要離開並刪除群組「${groupData.name}」嗎？`)) {
                             if (isCreator) {
-                                if (confirm(`👑 警告：你是群主！退出群組將導致該群組「直接解散」，所有成員都會被踢出。確定要解散嗎？`)) {
+                                if (confirm(`👑 警告：你是群主！退出將導致該群組「直接解散」。確定嗎？`)) {
                                     try {
                                         await remove(ref(db, `chats/${groupId}`)); 
                                         await remove(ref(db, `users/${myUid}/groups/${groupId}`)); 
-                                        alert('群組已成功解散。');
+                                        alert('群組已解散。');
                                     } catch (error) { alert('解散失敗'); }
                                 }
                             } else {
-                                if (confirm(`⚠️ 再次確認：你將退出此群組，且看不到之前的對話紀錄。確定要退出嗎？`)) {
+                                if (confirm(`⚠️ 再次確認：你將退出此群組且看不到對話紀錄。確定嗎？`)) {
                                     try {
                                         await remove(ref(db, `users/${myUid}/groups/${groupId}`));
                                         await remove(ref(db, `chats/${groupId}/info/members/${myUid}`));
-                                        alert('已成功退出群組。');
+                                        alert('已退出群組。');
                                     } catch (error) { alert('退出失敗'); }
                                 }
                             }
                         }
                     });
-
                     groupList.appendChild(div);
                 }
             });
             unsubscribes.push(unsub);
         }
 
-        createGroupBtn.addEventListener('click', () => {
-            groupNameInput.value = '';
-            modalOverlay.style.display = 'flex';
-        });
-
+        createGroupBtn.addEventListener('click', () => { groupNameInput.value = ''; modalOverlay.style.display = 'flex'; });
         cancelGroupBtn.addEventListener('click', () => modalOverlay.style.display = 'none');
-
         confirmGroupBtn.addEventListener('click', async () => {
             const groupName = groupNameInput.value.trim();
             if (!groupName) return alert('請輸入群組名稱');
-
             const newGroupRef = push(ref(db, 'chats'));
             const groupId = newGroupRef.key;
-
             try {
-                await set(ref(db, `chats/${groupId}/info`), { 
-                    type: 'group', 
-                    name: groupName, 
-                    creatorId: myUid,
-                    members: { [myUid]: myNickname } 
-                });
+                await set(ref(db, `chats/${groupId}/info`), { type: 'group', name: groupName, creatorId: myUid, members: { [myUid]: myNickname } });
                 await set(ref(db, `users/${myUid}/groups/${groupId}`), { name: groupName });
-                
                 modalOverlay.style.display = 'none';
-                alert('群組建立成功！你是群主，可進入群組邀請好友。');
+                alert('群組建立成功！');
             } catch (error) { alert('建立群組失敗'); }
         });
 
         inviteGroupMemberBtn.addEventListener('click', () => {
             inviteFriendList.innerHTML = '';
             if (Object.keys(myFriendsData).length === 0) return alert('你還沒有好友！');
-            
             for (const [friendUid, friendNickname] of Object.entries(myFriendsData)) {
                 const label = document.createElement('label');
                 label.innerHTML = `<input type="checkbox" value="${friendUid}" data-name="${friendNickname}"> ${friendNickname}`;
@@ -850,38 +700,26 @@
             }
             inviteModalOverlay.style.display = 'flex';
         });
-
         cancelInviteBtn.addEventListener('click', () => inviteModalOverlay.style.display = 'none');
-
         confirmInviteBtn.addEventListener('click', async () => {
             if (!currentChat || currentChat.type !== 'group') return;
-            
             const selectedFriends = Array.from(inviteFriendList.querySelectorAll('input[type="checkbox"]:checked'));
             if (selectedFriends.length === 0) return alert('請至少選擇一位好友');
-
             const groupId = currentChat.id;
-
             try {
                 for (const cb of selectedFriends) {
-                    const friendUid = cb.value;
-                    const friendName = cb.dataset.name;
-                    
-                    await update(ref(db, `chats/${groupId}/info/members`), { [friendUid]: friendName });
-                    await set(ref(db, `users/${friendUid}/groups/${groupId}`), { name: currentChat.name });
+                    await update(ref(db, `chats/${groupId}/info/members`), { [cb.value]: cb.dataset.name });
+                    await set(ref(db, `users/${cb.value}/groups/${groupId}`), { name: currentChat.name });
                 }
                 inviteModalOverlay.style.display = 'none';
                 alert('已成功邀請好友加入群組！');
-            } catch (error) {
-                console.error(error);
-                alert('邀請失敗');
-            }
+            } catch (error) { alert('邀請失敗'); }
         });
 
         clearChatBtn.addEventListener('click', () => {
-            if (currentChat.type === 'friend') {
-                deleteRecordModalOverlay.style.display = 'flex';
-            } else if (currentChat.type === 'public' && isAdmin) {
-                if (confirm('⚠️ 管理員權限：確定要清空公共聊天室的所有歷史紀錄嗎？這無法復原！')) {
+            if (currentChat.type === 'friend') deleteRecordModalOverlay.style.display = 'flex';
+            else if (currentChat.type === 'public' && isAdmin) {
+                if (confirm('⚠️ 管理員權限：確定要清空公共聊天室的所有歷史紀錄嗎？')) {
                     try {
                         remove(ref(db, `chats/public_lobby/messages`));
                         messagesDiv.innerHTML = ''; 
@@ -890,41 +728,26 @@
                 }
             }
         });
-
         cancelDeleteRecordBtn.addEventListener('click', () => deleteRecordModalOverlay.style.display = 'none');
-
         confirmDeleteRecordBtn.addEventListener('click', async () => {
             if (!currentChat || currentChat.type !== 'friend') return;
-            
             try {
-                await set(ref(db, `users/${currentChat.otherUid}/notifications/deleteRequest/${myUid}`), {
-                    roomId: currentChat.id,
-                    requesterName: myNickname
-                });
+                await set(ref(db, `users/${currentChat.otherUid}/notifications/deleteRequest/${myUid}`), { roomId: currentChat.id, requesterName: myNickname });
                 deleteRecordModalOverlay.style.display = 'none';
-                alert('已送出刪除請求，請等待對方同意。');
-            } catch (error) {
-                console.error(error);
-                alert('請求失敗');
-            }
+                alert('已送出刪除請求。');
+            } catch (error) { alert('請求失敗'); }
         });
 
         function listenForDeleteRequests() {
             const unsub = onValue(ref(db, `users/${myUid}/notifications/deleteRequest`), (snapshot) => {
                 const requests = snapshot.val();
                 if (!requests) return;
-
                 for (const [requesterUid, data] of Object.entries(requests)) {
-                    const roomId = data.roomId;
-                    
                     if (confirm(`「${data.requesterName}」請求刪除你們的聊天紀錄，是否同意？`)) {
-                        remove(ref(db, `chats/${roomId}`)).then(() => {
+                        remove(ref(db, `chats/${data.roomId}`)).then(() => {
                             remove(ref(db, `users/${myUid}/notifications/deleteRequest/${requesterUid}`));
                             alert('紀錄已刪除。');
-                            if (currentChat && currentChat.id === roomId) {
-                                chatWindow.style.display = 'none';
-                                currentChat = null;
-                            }
+                            if (currentChat && currentChat.id === data.roomId) { chatWindow.style.display = 'none'; currentChat = null; }
                         });
                     } else {
                         remove(ref(db, `users/${myUid}/notifications/deleteRequest/${requesterUid}`));
@@ -936,69 +759,47 @@
         }
 
         backBtn.addEventListener('click', () => {
-            chatWindow.style.display = 'none';
-            currentChat = null;
-            currentGroupInfo = null;
-            inviteGroupMemberBtn.style.display = 'none'; 
-            clearChatBtn.style.display = 'none';
+            chatWindow.style.display = 'none'; currentChat = null; currentGroupInfo = null;
+            inviteGroupMemberBtn.style.display = 'none'; clearChatBtn.style.display = 'none';
             if (currentChatUnsubscribe) { currentChatUnsubscribe(); currentChatUnsubscribe = null; }
         });
 
         function openChat(roomId, roomName, type) {
             currentChat = { id: roomId, name: roomName, type: type };
             chatWithName.textContent = roomName;
-            chatWindow.style.display = 'flex';
-            messagesDiv.innerHTML = '';
-            currentGroupInfo = null;
+            chatWindow.style.display = 'flex'; messagesDiv.innerHTML = ''; currentGroupInfo = null;
 
             if (type === 'friend') {
-                const uids = roomId.split('_');
-                currentChat.otherUid = uids[0] === myUid ? uids[1] : uids[0];
-                clearChatBtn.style.display = 'block';
-                clearChatBtn.innerText = '🗑️ 刪除紀錄';
-                inviteGroupMemberBtn.style.display = 'none';
+                const uids = roomId.split('_'); currentChat.otherUid = uids[0] === myUid ? uids[1] : uids[0];
+                clearChatBtn.style.display = 'block'; clearChatBtn.innerText = '🗑️ 刪除紀錄'; inviteGroupMemberBtn.style.display = 'none';
             } else if (type === 'public') {
                 inviteGroupMemberBtn.style.display = 'none';
-                if (isAdmin) {
-                    clearChatBtn.style.display = 'block';
-                    clearChatBtn.innerText = '🗑️ 清空紀錄';
-                } else {
-                    clearChatBtn.style.display = 'none';
-                }
+                if (isAdmin) { clearChatBtn.style.display = 'block'; clearChatBtn.innerText = '🗑️ 清空紀錄'; } 
+                else { clearChatBtn.style.display = 'none'; }
             } else if (type === 'group') {
                 clearChatBtn.style.display = 'none';
                 get(ref(db, `chats/${roomId}/info`)).then((snapshot) => {
                     if (snapshot.exists()) {
                         currentGroupInfo = snapshot.val(); 
-                        if (currentGroupInfo.creatorId === myUid || isAdmin) {
-                            inviteGroupMemberBtn.style.display = 'block';
-                        } else {
-                            inviteGroupMemberBtn.style.display = 'none';
-                        }
+                        if (currentGroupInfo.creatorId === myUid || isAdmin) inviteGroupMemberBtn.style.display = 'block';
+                        else inviteGroupMemberBtn.style.display = 'none';
                     }
                 });
-            } else {
-                clearChatBtn.style.display = 'none';
-                inviteGroupMemberBtn.style.display = 'none';
-            }
+            } else { clearChatBtn.style.display = 'none'; inviteGroupMemberBtn.style.display = 'none'; }
 
             if (currentChatUnsubscribe) currentChatUnsubscribe();
-
-            const chatRef = ref(db, `chats/${roomId}/messages`);
-            currentChatUnsubscribe = onChildAdded(chatRef, (snapshot) => {
+            currentChatUnsubscribe = onChildAdded(ref(db, `chats/${roomId}/messages`), (snapshot) => {
                 displayMessage(snapshot.key, snapshot.val());
             });
         }
 
         sendBtn.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-
         function sendMessage() {
             const text = messageInput.value.trim();
             if (!text || !myUid || !currentChat) return;
-            push(ref(db, `chats/${currentChat.id}/messages`), {
-                type: 'text', text: text, senderId: myUid, senderName: myNickname, timestamp: serverTimestamp()
-            }).then(() => { messageInput.value = ''; }).catch(console.error);
+            push(ref(db, `chats/${currentChat.id}/messages`), { type: 'text', text: text, senderId: myUid, senderName: myNickname, timestamp: serverTimestamp() })
+                .then(() => { messageInput.value = ''; }).catch(console.error);
         }
 
         fileBtn.addEventListener('click', () => fileInput.click());
@@ -1011,21 +812,15 @@
 
             const loadingId = 'loading-' + Date.now();
             const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'message me';
-            loadingDiv.id = loadingId;
+            loadingDiv.className = 'message me'; loadingDiv.id = loadingId;
             loadingDiv.innerHTML = `<div class="bubble" style="background:#ddd; color:#555;">正在上傳...</div>`;
-            messagesDiv.appendChild(loadingDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            messagesDiv.appendChild(loadingDiv); messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
             try {
                 const storagePath = `chats/${currentChat.id}/${Date.now()}_${file.name}`;
                 const fileRef = storageRef(storage, storagePath);
-                await uploadBytes(fileRef, file);
-                const downloadURL = await getDownloadURL(fileRef);
-                
-                await push(ref(db, `chats/${currentChat.id}/messages`), {
-                    type: type, url: downloadURL, fileName: file.name, senderId: myUid, senderName: myNickname, timestamp: serverTimestamp()
-                });
+                await uploadBytes(fileRef, file); const downloadURL = await getDownloadURL(fileRef);
+                await push(ref(db, `chats/${currentChat.id}/messages`), { type: type, url: downloadURL, fileName: file.name, senderId: myUid, senderName: myNickname, timestamp: serverTimestamp() });
                 loadingDiv.remove(); fileInput.value = '';
             } catch (error) { alert('上傳失敗'); loadingDiv.remove(); fileInput.value = ''; }
         });
@@ -1034,106 +829,68 @@
             if (document.getElementById(`msg-${id}`)) return;
             const isMe = data.senderId === myUid;
             const wrapper = document.createElement('div');
-            wrapper.className = `message ${isMe ? 'me' : 'other'}`;
-            wrapper.id = `msg-${id}`;
-            wrapper.dataset.senderId = data.senderId; 
+            wrapper.className = `message ${isMe ? 'me' : 'other'}`; wrapper.id = `msg-${id}`; wrapper.dataset.senderId = data.senderId; 
 
             if (isAdmin) {
-                const delBtn = document.createElement('button');
-                delBtn.className = 'delete-btn';
-                delBtn.innerHTML = '✕';
-                delBtn.title = '管理員刪除訊息';
+                const delBtn = document.createElement('button'); delBtn.className = 'delete-btn'; delBtn.innerHTML = '✕'; delBtn.title = '管理員刪除訊息';
                 delBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    if (confirm('管理員權限：確定要刪除這則訊息嗎？')) {
-                        remove(ref(db, `chats/${currentChat.id}/messages/${id}`));
-                        wrapper.remove();
-                    }
+                    if (confirm('管理員權限：確定要刪除這則訊息嗎？')) { remove(ref(db, `chats/${currentChat.id}/messages/${id}`)); wrapper.remove(); }
                 });
                 wrapper.appendChild(delBtn);
             }
 
             if (!isMe && currentChat.type === 'group' && currentGroupInfo && (currentGroupInfo.creatorId === myUid || isAdmin)) {
-                const kickBtn = document.createElement('button');
-                kickBtn.className = 'kick-btn';
-                kickBtn.innerHTML = '🚫';
-                kickBtn.title = '將此人踢出群組';
+                const kickBtn = document.createElement('button'); kickBtn.className = 'kick-btn'; kickBtn.innerHTML = '🚫'; kickBtn.title = '踢出群組';
                 kickBtn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     if (confirm(`確定要將「${data.senderName}」踢出群組嗎？`)) {
-                        if (confirm(`⚠️ 再次確認：踢出後該成員將無法再看到此群組，且需要重新邀請。確定嗎？`)) {
+                        if (confirm(`⚠️ 再次確認：確定嗎？`)) {
                             try {
                                 await remove(ref(db, `chats/${currentChat.id}/info/members/${data.senderId}`));
                                 await remove(ref(db, `users/${data.senderId}/groups/${currentChat.id}`));
                                 alert(`已將 ${data.senderName} 踢出群組。`);
-                            } catch (error) {
-                                alert('踢出失敗，請檢查權限。');
-                            }
+                            } catch (error) { alert('踢出失敗'); }
                         }
                     }
                 });
                 wrapper.appendChild(kickBtn);
             }
 
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble';
-
+            const bubble = document.createElement('div'); bubble.className = 'bubble';
             if (!isMe && (currentChat.type === 'group' || currentChat.type === 'public') && data.senderName) {
-                const nameDiv = document.createElement('div');
-                nameDiv.className = 'sender-info';
-                const statusIcon = getStatusIcon(data.senderId);
-                nameDiv.innerHTML = `<span>${data.senderName}</span> <span class="sender-status-text">${statusIcon}</span>`;
+                const nameDiv = document.createElement('div'); nameDiv.className = 'sender-info';
+                nameDiv.innerHTML = `<span>${data.senderName}</span> <span class="sender-status-text">${getStatusIcon(data.senderId)}</span>`;
                 wrapper.appendChild(nameDiv);
             }
 
             if (data.type === 'image') {
-                const img = document.createElement('img');
-                img.src = data.url;
-                img.onclick = () => window.open(data.url, '_blank');
-                bubble.appendChild(img);
+                const img = document.createElement('img'); img.src = data.url; img.onclick = () => window.open(data.url, '_blank'); bubble.appendChild(img);
             } else if (data.type === 'video') {
-                const video = document.createElement('video');
-                video.src = data.url; video.controls = true;
-                bubble.appendChild(video);
+                const video = document.createElement('video'); video.src = data.url; video.controls = true; bubble.appendChild(video);
             } else if (data.type === 'file') {
-                const a = document.createElement('a');
-                a.href = data.url; a.target = '_blank'; a.className = 'file-link';
-                a.innerHTML = `📄 ${data.fileName}`;
-                bubble.appendChild(a);
-            } else {
-                bubble.textContent = data.text;
-            }
+                const a = document.createElement('a'); a.href = data.url; a.target = '_blank'; a.className = 'file-link'; a.innerHTML = `📄 ${data.fileName}`; bubble.appendChild(a);
+            } else { bubble.textContent = data.text; }
 
-            const time = document.createElement('div');
-            time.className = 'time';
-            if (data.timestamp) {
-                const date = new Date(data.timestamp);
-                time.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            }
-
-            wrapper.appendChild(bubble);
-            wrapper.appendChild(time);
-            messagesDiv.appendChild(wrapper);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            const time = document.createElement('div'); time.className = 'time';
+            if (data.timestamp) time.textContent = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            wrapper.appendChild(bubble); wrapper.appendChild(time);
+            messagesDiv.appendChild(wrapper); messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
         function updateMessagesStatusUI() {
-            const messages = messagesDiv.querySelectorAll('.message.other');
-            messages.forEach(msg => {
-                const senderId = msg.dataset.senderId;
-                const statusSpan = msg.querySelector('.sender-status-text');
-                if (statusSpan && senderId) {
-                    statusSpan.textContent = getStatusIcon(senderId);
-                }
+            messagesDiv.querySelectorAll('.message.other').forEach(msg => {
+                const senderId = msg.dataset.senderId; const statusSpan = msg.querySelector('.sender-status-text');
+                if (statusSpan && senderId) statusSpan.textContent = getStatusIcon(senderId);
             });
         }
 
         // ============================================================
-        // 🐠 公共水族缸：每人一隻魚，魚的名字 = 帳號
+        // 🐠 公共水族缸：每人一隻魚，魚的名字 = 帳號（支援管理員刪魚）
         // ============================================================
         let aquariumStarted = false;
         let aquariumAnimId = null;
-        let allFishes = {};              // { uid: { ownerName, color, size, speed, dir, phase, bornAt } }
+        let allFishes = {};              
         let aqBubbles = [];
         let aqPlants = [];
         let aquariumUnsubscribe = null;
@@ -1146,65 +903,36 @@
             aqW = aquariumCanvas.width = Math.max(1, rect.width);
             aqH = aquariumCanvas.height = Math.max(1, rect.height);
         }
-        window.addEventListener('resize', () => {
-            if (aquariumWindow.style.display === 'flex') resizeAquarium();
-        });
+        window.addEventListener('resize', () => { if (aquariumWindow.style.display === 'flex') resizeAquarium(); });
 
         function initAquariumScene() {
-            resizeAquarium();
-            aqBubbles = [];
-            aqPlants = [];
-            for (let i = 0; i < 25; i++) {
-                aqBubbles.push({
-                    x: Math.random() * aqW, y: Math.random() * aqH,
-                    r: 2 + Math.random() * 4, s: 0.5 + Math.random() * 1.2
-                });
-            }
+            resizeAquarium(); aqBubbles = []; aqPlants = [];
+            for (let i = 0; i < 25; i++) aqBubbles.push({ x: Math.random() * aqW, y: Math.random() * aqH, r: 2 + Math.random() * 4, s: 0.5 + Math.random() * 1.2 });
             const plantCount = 10;
-            for (let i = 0; i < plantCount; i++) {
-                aqPlants.push({
-                    x: 20 + i * (aqW - 40) / (plantCount - 1),
-                    h: 50 + Math.random() * (aqH * 0.25),
-                    phase: Math.random() * Math.PI * 2
-                });
-            }
+            for (let i = 0; i < plantCount; i++) aqPlants.push({ x: 20 + i * (aqW - 40) / (plantCount - 1), h: 50 + Math.random() * (aqH * 0.25), phase: Math.random() * Math.PI * 2 });
         }
 
-        // 確保我在公共缸裡有一隻魚；魚的名字 = 我的帳號（暱稱）
         async function ensureMyFishInPublicTank() {
             if (!myUid) return;
             try {
                 const snap = await get(ref(db, `aquarium/fishes/${myUid}`));
                 const existing = snap.val();
-
                 if (!existing) {
-                    const newFish = {
-                        ownerName: myNickname,          // ← 魚的名字 = 帳號
-                        color: `hsl(${Math.random() * 360},70%,60%)`,
-                        size: 8 + Math.random() * 8,
-                        speed: 0.5 + Math.random() * 1.2,
-                        dir: Math.random() < 0.5 ? 1 : -1,
-                        phase: Math.random() * Math.PI * 2,
-                        bornAt: Date.now()
-                    };
+                    const newFish = { ownerName: myNickname, color: `hsl(${Math.random() * 360},70%,60%)`, size: 8 + Math.random() * 8, speed: 0.5 + Math.random() * 1.2, dir: Math.random() < 0.5 ? 1 : -1, phase: Math.random() * Math.PI * 2, bornAt: Date.now() };
                     await set(ref(db, `aquarium/fishes/${myUid}`), newFish);
                 } else if (existing.ownerName !== myNickname) {
                     await update(ref(db, `aquarium/fishes/${myUid}`), { ownerName: myNickname });
                 }
-            } catch (e) {
-                console.warn('建立/更新公共魚失敗', e);
-            }
+            } catch (e) { console.warn('建立/更新公共魚失敗', e); }
         }
 
-        // 即時監聽公共魚缸所有魚
         function listenPublicTank() {
             if (aquariumUnsubscribe) aquariumUnsubscribe();
             aquariumUnsubscribe = onValue(ref(db, 'aquarium/fishes'), (snapshot) => {
                 allFishes = snapshot.val() || {};
                 let count = 0;
                 for (const uid in allFishes) {
-                    const f = allFishes[uid];
-                    count++;
+                    const f = allFishes[uid]; count++;
                     if (f._x == null) f._x = Math.random() * (aqW || 300);
                     if (f._y == null) f._y = 60 + Math.random() * Math.max(1, (aqH || 300) - 140);
                 }
@@ -1213,63 +941,37 @@
         }
 
         function drawAquarium(t) {
-            // 水色
             const g = aqCtx.createLinearGradient(0, 0, 0, aqH);
-            g.addColorStop(0, '#0a4d68');
-            g.addColorStop(1, '#03202e');
-            aqCtx.fillStyle = g;
-            aqCtx.fillRect(0, 0, aqW, aqH);
+            g.addColorStop(0, '#0a4d68'); g.addColorStop(1, '#03202e');
+            aqCtx.fillStyle = g; aqCtx.fillRect(0, 0, aqW, aqH);
 
-            // 光線
-            aqCtx.save();
-            aqCtx.globalAlpha = 0.08;
-            aqCtx.fillStyle = '#aef';
+            aqCtx.save(); aqCtx.globalAlpha = 0.08; aqCtx.fillStyle = '#aef';
             for (let i = 0; i < 5; i++) {
-                aqCtx.beginPath();
-                aqCtx.moveTo(aqW * 0.1 + i * aqW * 0.18, 0);
-                aqCtx.lineTo(aqW * 0.18 + i * aqW * 0.18, 0);
-                aqCtx.lineTo(aqW * 0.26 + i * aqW * 0.18, aqH);
-                aqCtx.lineTo(aqW * 0.1 + i * aqW * 0.18, aqH);
-                aqCtx.closePath();
-                aqCtx.fill();
+                aqCtx.beginPath(); aqCtx.moveTo(aqW * 0.1 + i * aqW * 0.18, 0); aqCtx.lineTo(aqW * 0.18 + i * aqW * 0.18, 0);
+                aqCtx.lineTo(aqW * 0.26 + i * aqW * 0.18, aqH); aqCtx.lineTo(aqW * 0.1 + i * aqW * 0.18, aqH); aqCtx.closePath(); aqCtx.fill();
             }
             aqCtx.restore();
 
-            // 砂
             const sg = aqCtx.createLinearGradient(0, aqH - 60, 0, aqH);
-            sg.addColorStop(0, '#c2a878');
-            sg.addColorStop(1, '#8a7350');
-            aqCtx.fillStyle = sg;
-            aqCtx.beginPath();
-            aqCtx.moveTo(0, aqH - 40);
+            sg.addColorStop(0, '#c2a878'); sg.addColorStop(1, '#8a7350');
+            aqCtx.fillStyle = sg; aqCtx.beginPath(); aqCtx.moveTo(0, aqH - 40);
             for (let x = 0; x <= aqW; x += 50) aqCtx.lineTo(x, aqH - 40 + Math.sin(x / 70) * 8);
-            aqCtx.lineTo(aqW, aqH); aqCtx.lineTo(0, aqH);
-            aqCtx.closePath(); aqCtx.fill();
+            aqCtx.lineTo(aqW, aqH); aqCtx.lineTo(0, aqH); aqCtx.closePath(); aqCtx.fill();
 
-            // 水草
-            aqCtx.strokeStyle = '#2e8b57';
-            aqCtx.lineWidth = 6;
-            aqCtx.lineCap = 'round';
+            aqCtx.strokeStyle = '#2e8b57'; aqCtx.lineWidth = 6; aqCtx.lineCap = 'round';
             aqPlants.forEach(p => {
-                aqCtx.beginPath();
-                aqCtx.moveTo(p.x, aqH);
+                aqCtx.beginPath(); aqCtx.moveTo(p.x, aqH);
                 const sway = Math.sin(t / 800 + p.phase) * 15;
-                aqCtx.quadraticCurveTo(p.x + sway, aqH - p.h * 0.6, p.x + sway * 1.5, aqH - p.h);
-                aqCtx.stroke();
+                aqCtx.quadraticCurveTo(p.x + sway, aqH - p.h * 0.6, p.x + sway * 1.5, aqH - p.h); aqCtx.stroke();
             });
 
-            // 氣泡
             aqCtx.fillStyle = 'rgba(200,240,255,0.6)';
             aqBubbles.forEach(b => {
-                b.y -= b.s;
-                b.x += Math.sin(t / 300 + b.y / 50) * 0.3;
+                b.y -= b.s; b.x += Math.sin(t / 300 + b.y / 50) * 0.3;
                 if (b.y < -10) { b.y = aqH + 10; b.x = Math.random() * aqW; }
-                aqCtx.beginPath();
-                aqCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-                aqCtx.fill();
+                aqCtx.beginPath(); aqCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2); aqCtx.fill();
             });
 
-            // 畫所有魚
             for (const uid in allFishes) {
                 const f = allFishes[uid];
                 if (f._x == null) f._x = Math.random() * aqW;
@@ -1283,60 +985,68 @@
                 if (f._y > aqH - 60) f._y = aqH - 60;
 
                 const s = f.size || 12;
-                aqCtx.save();
-                aqCtx.translate(f._x, f._y);
-                aqCtx.scale(f.dir || 1, 1);
+                aqCtx.save(); aqCtx.translate(f._x, f._y); aqCtx.scale(f.dir || 1, 1);
 
-                // 尾巴
                 const tail = Math.sin(t / 150 + (f.phase || 0)) * 4;
                 aqCtx.fillStyle = f.color || '#4af';
-                aqCtx.beginPath();
-                aqCtx.moveTo(-s, 0);
-                aqCtx.lineTo(-s * 1.8, -s * 0.6 + tail);
-                aqCtx.lineTo(-s * 1.8, s * 0.6 + tail);
-                aqCtx.closePath(); aqCtx.fill();
+                aqCtx.beginPath(); aqCtx.moveTo(-s, 0); aqCtx.lineTo(-s * 1.8, -s * 0.6 + tail); aqCtx.lineTo(-s * 1.8, s * 0.6 + tail); aqCtx.closePath(); aqCtx.fill();
 
-                // 身體
-                aqCtx.beginPath();
-                aqCtx.ellipse(0, 0, s, s * 0.55, 0, 0, Math.PI * 2);
-                aqCtx.fill();
+                aqCtx.beginPath(); aqCtx.ellipse(0, 0, s, s * 0.55, 0, 0, Math.PI * 2); aqCtx.fill();
 
-                // 眼睛
-                aqCtx.fillStyle = '#fff';
-                aqCtx.beginPath();
-                aqCtx.arc(s * 0.5, -s * 0.15, s * 0.18, 0, Math.PI * 2);
-                aqCtx.fill();
-                aqCtx.fillStyle = '#000';
-                aqCtx.beginPath();
-                aqCtx.arc(s * 0.55, -s * 0.15, s * 0.08, 0, Math.PI * 2);
-                aqCtx.fill();
+                aqCtx.fillStyle = '#fff'; aqCtx.beginPath(); aqCtx.arc(s * 0.5, -s * 0.15, s * 0.18, 0, Math.PI * 2); aqCtx.fill();
+                aqCtx.fillStyle = '#000'; aqCtx.beginPath(); aqCtx.arc(s * 0.55, -s * 0.15, s * 0.08, 0, Math.PI * 2); aqCtx.fill();
 
                 aqCtx.restore();
 
-                // 魚的名字 = 帳號（顯示在魚上方；自己的魚用黃色）
                 if (f.ownerName) {
-                    aqCtx.save();
-                    aqCtx.font = 'bold 12px sans-serif';
-                    aqCtx.textAlign = 'center';
-                    aqCtx.fillStyle = (uid === myUid) ? '#ffe066' : 'rgba(255,255,255,0.85)';
-                    aqCtx.fillText(f.ownerName, f._x, f._y - s - 6);
-                    aqCtx.restore();
+                    aqCtx.save(); aqCtx.font = 'bold 12px sans-serif'; aqCtx.textAlign = 'center';
+                    if (uid === myUid) aqCtx.fillStyle = '#ffe066';
+                    else aqCtx.fillStyle = 'rgba(255,255,255,0.85)';
+                    aqCtx.fillText(f.ownerName, f._x, f._y - s - 6); aqCtx.restore();
                 }
             }
-
             aquariumAnimId = requestAnimationFrame(drawAquarium);
         }
 
+        // 🌟 管理員點擊刪魚
+        aquariumCanvas.addEventListener('click', async (e) => {
+            if (!isAdmin) return;
+
+            const rect = aquariumCanvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            for (const uid in allFishes) {
+                const f = allFishes[uid];
+                if (f._x == null || f._y == null) continue;
+
+                const s = f.size || 12;
+                const dist = Math.hypot(clickX - f._x, clickY - f._y);
+                
+                if (dist < s * 1.8) {
+                    if (uid === myUid) {
+                        alert("這是你自己的魚喔！管理員只能刪別人的魚。");
+                        return;
+                    }
+
+                    if (confirm(`⚠️ 管理員權限：確定要刪除「${f.ownerName}」的魚嗎？`)) {
+                        try {
+                            await remove(ref(db, `aquarium/fishes/${uid}`));
+                        } catch (error) {
+                            alert(`刪除失敗：\n${error.message}`);
+                        }
+                    }
+                    return; 
+                }
+            }
+        });
+
         async function openAquarium() {
             aquariumWindow.style.display = 'flex';
-            if (!aquariumStarted) {
-                initAquariumScene();
-                aquariumStarted = true;
-            } else {
-                resizeAquarium();
-            }
-            await ensureMyFishInPublicTank();   // 先確保自己的魚存在（名字=帳號）
-            listenPublicTank();                 // 再監聽全缸
+            if (!aquariumStarted) { initAquariumScene(); aquariumStarted = true; } 
+            else { resizeAquarium(); }
+            await ensureMyFishInPublicTank();
+            listenPublicTank();
             if (!aquariumAnimId) drawAquarium(0);
         }
 
