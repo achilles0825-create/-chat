@@ -172,7 +172,9 @@
         #aquarium-canvas { cursor: pointer; }
         .feed-btn { background: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 5px; transition: 0.2s; }
         .feed-btn:disabled { background: #555; color: #999; cursor: not-allowed; }
-    </style>
+    
+#aquarium-window .header-actions{gap:6px;flex-wrap:wrap}#aquarium-window button{white-space:nowrap}.a-tools{padding:8px;background:#082b3a;color:white;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}.a-tools select{padding:6px;border-radius:6px}.a-tools input{width:30px;height:27px;vertical-align:middle}#a-overlay{display:none;position:fixed;inset:0;z-index:160;background:#0009;align-items:center;justify-content:center;padding:16px}.a-panel{width:100%;max-width:760px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;background:#f3f6fa;border-radius:14px}.a-panel h3{background:#03202e;color:white;text-align:center;padding:18px}#a-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;padding:16px;overflow:auto}.a-card{padding:16px;background:white;border:1px solid #dce4ed;border-radius:12px;color:#273246}.a-card p{margin:8px 0 14px;overflow-wrap:anywhere}.a-card button{padding:11px 7px;border:0;border-radius:7px;color:white;cursor:pointer}.a-reset{width:100%;background:#dc9517}.a-delete{width:100%;background:#cf4545}.a-row{display:flex;align-items:center;gap:6px;margin:8px 0 14px}.a-row button{flex:1;background:#2980b9;white-space:nowrap}.a-row button:last-child{background:#27ae60}.a-row input{width:68px;min-width:0;padding:10px 3px;text-align:center;border:1px solid #cbd5e1;border-radius:7px;font-size:16px}.a-panel footer{padding:14px;text-align:right}.a-panel footer button{padding:10px 24px;background:#273246;color:white;border:0;border-radius:7px;cursor:pointer}.a-card button:disabled{opacity:.5}@media(max-width:420px){#a-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 
@@ -1146,7 +1148,8 @@
         let allFishes = {};              
         let aqBubbles = [];
         let aqPlants = [];
-        let aqBread = null; 
+        let aqBread = null;
+        let liveFoods = {}, foodUnsubscribe = null; 
         let aquariumUnsubscribe = null;
         let myLastFedAt = 0; 
 
@@ -1183,10 +1186,8 @@
         }
 
         function calcFishSize(bornAt) {
-            if (!bornAt) return 8;
-            const daysOld = (Date.now() - bornAt) / (1000 * 60 * 60 * 24);
-            const growth = Math.floor(daysOld / 5) * 2;
-            return Math.min(8 + growth, 20);
+            const days = Math.max(0, (Date.now() - (Number(bornAt) || Date.now())) / 86400000);
+            return 10 + Math.floor(days / 5) * 5;
         }
 
         async function ensureMyFishInPublicTank() {
@@ -1199,7 +1200,7 @@
                     const newFish = { 
                         ownerName: myNickname, 
                         color: `hsl(${Math.random() * 360},70%,60%)`, 
-                        size: 8, 
+                        size: 10, 
                         speed: 0.5 + Math.random() * 1.2, 
                         dirX: Math.random() < 0.5 ? 1 : -1, 
                         dirY: (Math.random() - 0.5) * 0.5, 
@@ -1223,7 +1224,11 @@
         function listenPublicTank() {
             if (aquariumUnsubscribe) aquariumUnsubscribe();
             aquariumUnsubscribe = onValue(ref(db, 'aquarium/fishes'), (snapshot) => {
+                const previous = allFishes;
                 allFishes = snapshot.val() || {};
+                for (const [id, fish] of Object.entries(allFishes)) {
+                    if (previous[id]) { fish._x = previous[id]._x; fish._y = previous[id]._y; }
+                }
                 let count = 0;
                 for (const uid in allFishes) {
                     const f = allFishes[uid]; count++;
@@ -1255,15 +1260,14 @@
 
         feedFishBtn.addEventListener('click', async () => {
             if (feedFishBtn.disabled) return;
-            if (aqBread) return;
+            if (liveFoods[myUid]) return;
 
-            aqBread = {
-                x: aqW * 0.2 + Math.random() * aqW * 0.6,
-                y: -30, 
-                speed: 0.8, 
-                size: 14, 
-                phase: Math.random() * Math.PI * 2
-            };
+            try {
+                await set(ref(db, `aquarium/foods/${myUid}`), {
+                    ownerUid: myUid, x: 0.15 + Math.random() * 0.7,
+                    y: 0.2 + Math.random() * 0.5, createdAt: Date.now()
+                });
+            } catch (error) { alert('餵食失敗：' + error.message); return; }
 
             const now = Date.now();
             myLastFedAt = now;
@@ -1308,16 +1312,10 @@
                 aqCtx.beginPath(); aqCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2); aqCtx.fill();
             });
 
-            if (aqBread) {
-                aqBread.y += aqBread.speed;
-                aqBread.x += Math.sin(t / 400 + aqBread.phase) * 0.5;
-                
-                aqCtx.font = `${aqBread.size * 2}px Arial`;
-                aqCtx.textAlign = 'center';
-                aqCtx.textBaseline = 'middle';
-                aqCtx.fillText('🍞', aqBread.x, aqBread.y);
-
-                if (aqBread.y > aqH - 30) aqBread = null; 
+            for (const food of Object.values(liveFoods)) {
+                aqCtx.save(); aqCtx.font = '26px sans-serif';
+                aqCtx.textAlign = 'center'; aqCtx.textBaseline = 'middle';
+                aqCtx.fillText('🍞', food.x * aqW, food.y * aqH); aqCtx.restore();
             }
 
             for (const uid in allFishes) {
@@ -1329,21 +1327,22 @@
                 if (f.turnCooldown == null) f.turnCooldown = 0;
 
                 let isChasing = false;
-                if (aqBread) {
-                    const dist = Math.hypot(aqBread.x - f._x, aqBread.y - f._y);
-                    if (dist < 400) {
-                        isChasing = true;
-                        f.dirX = aqBread.x > f._x ? 1 : -1;
-                        f.dirY = aqBread.y > f._y ? 1 : -1;
-                        
-                        f._x += (f.speed || 1) * f.dirX * 1.5;
-                        f._y += (f.speed || 1) * f.dirY * 1.5;
-
-                        if (dist < (f.size || 12) + aqBread.size) {
-                            aqBread = null;
-                            f.dirX *= -1;
-                            f.turnCooldown = 50;
-                        }
+                const food = liveFoods[uid];
+                if (food) {
+                    isChasing = true;
+                    const dx = food.x * aqW - f._x, dy = food.y * aqH - f._y;
+                    const distance = Math.hypot(dx, dy);
+                    const step = Math.min(4, distance);
+                    if (distance > 0) {
+                        f._x += dx / distance * step;
+                        f._y += dy / distance * step;
+                        f.dirX = dx < 0 ? -1 : 1;
+                    }
+                    if (distance < 10 && uid === myUid && !food._removing) {
+                        food._removing = true;
+                        remove(ref(db, `aquarium/foods/${uid}`)).catch(error => {
+                            food._removing = false; console.warn(error);
+                        });
                     }
                 }
 
@@ -1365,11 +1364,18 @@
                 if (f._y > aqH - 50) { f._y = aqH - 50; f.dirY = -Math.abs(f.dirY) || -0.5; }
                 if (f.dirX === 0 && f.dirY === 0) f.dirX = 1;
 
-                const s = f.size || 12;
+                const s = calcFishSize(f.bornAt);
                 aqCtx.save(); 
                 aqCtx.translate(f._x, f._y); 
                 aqCtx.scale(f.dirX || 1, 1);
 
+                const speciesInfo = tankSpecies.find(item => item.id === f.species);
+                if (speciesInfo) {
+                    aqCtx.scale(-1, 1);
+                    aqCtx.font = `${s * 2.8}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+                    aqCtx.textAlign = 'center'; aqCtx.textBaseline = 'middle';
+                    aqCtx.fillText(speciesInfo.icon, 0, 0);
+                } else {
                 const tail = Math.sin(t / 150 + (f.phase || 0)) * 4;
                 aqCtx.fillStyle = f.color || '#4af';
                 aqCtx.beginPath(); aqCtx.moveTo(-s, 0); aqCtx.lineTo(-s * 1.8, -s * 0.6 + tail); aqCtx.lineTo(-s * 1.8, s * 0.6 + tail); aqCtx.closePath(); aqCtx.fill();
@@ -1379,6 +1385,7 @@
                 aqCtx.fillStyle = '#fff'; aqCtx.beginPath(); aqCtx.arc(s * 0.5, -s * 0.15, s * 0.18, 0, Math.PI * 2); aqCtx.fill();
                 aqCtx.fillStyle = '#000'; aqCtx.beginPath(); aqCtx.arc(s * 0.55, -s * 0.15, s * 0.08, 0, Math.PI * 2); aqCtx.fill();
 
+                }
                 aqCtx.restore();
 
                 if (f.ownerName) {
@@ -1391,29 +1398,7 @@
             aquariumAnimId = requestAnimationFrame(drawAquarium);
         }
 
-        aquariumCanvas.addEventListener('click', async (e) => {
-            if (!isAdmin) return;
-            const rect = aquariumCanvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
-
-            for (const uid in allFishes) {
-                const f = allFishes[uid];
-                if (f._x == null || f._y == null) continue;
-                const s = f.size || 12;
-                const dist = Math.hypot(clickX - f._x, clickY - f._y);
-                
-                if (dist < s * 2.5) {
-                    if (uid === myUid) { alert("這是你自己的魚喔！管理員只能刪別人的魚。"); return; }
-                    if (confirm(`⚠️ 管理員權限：確定要刪除「${f.ownerName}」的魚嗎？`)) {
-                        delete allFishes[uid];
-                        if (aqFishCount) aqFishCount.textContent = `🐟 ${Object.keys(allFishes).length} 隻魚`;
-                        try { await remove(ref(db, `aquarium/fishes/${uid}`)); } catch (error) { console.warn(error); }
-                    }
-                    return; 
-                }
-            }
-        });
+        aquariumCanvas.addEventListener('click', () => { if (isAdmin) aButton.click(); });
 
         async function openAquarium() {
             aquariumWindow.style.display = 'flex';
@@ -1421,6 +1406,10 @@
             else { resizeAquarium(); }
             await ensureMyFishInPublicTank();
             listenPublicTank();
+            if (foodUnsubscribe) foodUnsubscribe();
+            foodUnsubscribe = onValue(ref(db, 'aquarium/foods'), snapshot => {
+                liveFoods = snapshot.val() || {};
+            }, console.error);
             loadMyFeedTime(); 
             if (!aquariumAnimId) drawAquarium(0);
         }
@@ -1429,11 +1418,33 @@
             aquariumWindow.style.display = 'none';
             if (aquariumAnimId) { cancelAnimationFrame(aquariumAnimId); aquariumAnimId = null; }
             if (aquariumUnsubscribe) { aquariumUnsubscribe(); aquariumUnsubscribe = null; }
+            if (foodUnsubscribe) { foodUnsubscribe(); foodUnsubscribe = null; }
+            liveFoods = {};
             aquariumStarted = false;
         }
 
         aquariumEntry.addEventListener('click', openAquarium);
         aquariumBackBtn.addEventListener('click', closeAquarium);
-    </script>
+    
+const tankSpecies=[{"id": "puffer", "icon": "🐡", "name": "河豚"}, {"id": "shark", "icon": "🦈", "name": "鯊魚"}, {"id": "dolphin", "icon": "🐬", "name": "海豚"}, {"id": "whale", "icon": "🐳", "name": "鯨魚"}, {"id": "octopus", "icon": "🐙", "name": "章魚"}, {"id": "turtle", "icon": "🐢", "name": "海龜"}, {"id": "shrimp", "icon": "🦐", "name": "小蝦"}, {"id": "squid", "icon": "🦑", "name": "烏賊"}, {"id": "lobster", "icon": "🦞", "name": "龍蝦"}];
+
+const aTools=document.createElement('div');aTools.className='a-tools';const aLabel=document.createElement('label');aLabel.textContent='🧬 我的品種：';const aSelect=document.createElement('select');for(const bio of [{id:'original',icon:'',name:'原本彩色魚'},...tankSpecies]){const o=document.createElement('option');o.value=bio.id;o.textContent=bio.icon+' '+bio.name;aSelect.append(o);}aLabel.append(aSelect);const aColorLabel=document.createElement('label');aColorLabel.textContent='🎨 換色 ';const aColor=document.createElement('input');aColor.type='color';aColor.value='#44aaff';aColorLabel.append(aColor);const aHint=document.createElement('span');aHint.textContent='每5天大小增加5，無上限。圖示品種配色固定。';aHint.style.fontSize='11px';aTools.append(aLabel,aColorLabel,aHint);aquariumWindow.insertBefore(aTools,aquariumCanvas.parentElement);
+async function aSave(data){if(!myUid)return;try{await ensureMyFishInPublicTank();await update(ref(db,`aquarium/fishes/${myUid}`),data);}catch(e){alert('更新失敗：'+e.message);}}
+aSelect.onchange=()=>aSave({species:aSelect.value});aColor.onchange=()=>aSave({color:aColor.value});
+let aOwnUnsub=null,aFeedUnsub=null;
+onAuthStateChanged(auth,user=>{if(aOwnUnsub)aOwnUnsub();if(aFeedUnsub)aFeedUnsub();if(!user)return;aOwnUnsub=onValue(ref(db,`aquarium/fishes/${user.uid}`),snap=>{const f=snap.val()||{};aSelect.value=tankSpecies.some(b=>b.id===f.species)?f.species:'original';if(/^#[0-9a-f]{6}$/i.test(f.color||''))aColor.value=f.color;},console.error);aFeedUnsub=onValue(ref(db,`aquarium/feedLogs/${user.uid}`),snap=>{myLastFedAt=Number(snap.val()?.lastFedAt)||0;checkFeedCooldown();},console.error);});
+const aOverlay=document.createElement('div');aOverlay.id='a-overlay';aOverlay.innerHTML='<section class="a-panel" role="dialog" aria-modal="true" aria-label="魚群設定"><h3>⚙️ 魚群設定</h3><div id="a-grid"></div><footer><button type="button">關閉</button></footer></section>';document.body.append(aOverlay);const aGrid=document.getElementById('a-grid'),aButton=document.createElement('button');aButton.className='feed-btn';aButton.textContent='⚙️ 魚群設定';aButton.style.cssText='display:none;background:#5268b5';document.querySelector('#aquarium-window .header-actions').append(aButton);
+let aUnsub=null,aData={},aBusy=false;const aDay=86400000;
+function aAge(f){return Math.max(0,Math.floor((Date.now()-(Number(f.bornAt)||Date.now()))/aDay));}
+function aClose(){aOverlay.style.display='none';if(aUnsub){aUnsub();aUnsub=null;}}
+function aAccess(){aButton.style.display=auth.currentUser&&isAdmin?'inline-block':'none';if(!auth.currentUser||!isAdmin)aClose();}onAuthStateChanged(auth,aAccess);loginBtn.addEventListener('click',aAccess);logoutBtn.addEventListener('click',aClose);
+async function aRun(fn){if(!isAdmin||!myUid||aBusy)return;aBusy=true;aGrid.querySelectorAll('button,input').forEach(b=>b.disabled=true);try{await fn();}catch(e){alert(e.message);}finally{aBusy=false;aRender();}}
+function aBtn(text,cls,fn){const b=document.createElement('button');b.type='button';b.textContent=text;b.className=cls;b.disabled=aBusy;b.onclick=()=>aRun(fn);return b;}
+async function aSetAge(uid,days){if(!Number.isInteger(days)||days<0||days>36500)throw Error('請輸入0～36500的整數天數');const r=ref(db,`aquarium/fishes/${uid}`);if(!(await get(r)).exists())throw Error('魚已不存在');const bornAt=Date.now()-days*aDay;await update(r,{bornAt,size:calcFishSize(bornAt)});}
+async function aShift(uid,n){const snap=await get(ref(db,`aquarium/fishes/${uid}`));if(!snap.exists())throw Error('魚已不存在');await aSetAge(uid,Math.max(0,Math.min(36500,aAge(snap.val())+n)));}
+function aRender(){if(aGrid.contains(document.activeElement)&&document.activeElement.matches('input')&&!aBusy)return;aGrid.replaceChildren();if(!Object.keys(aData).length){aGrid.textContent='目前沒有魚';return;}for(const [uid,f] of Object.entries(aData)){const card=document.createElement('article');card.className='a-card';const name=document.createElement('p');name.textContent='魚主人：'+(f.ownerName||'未命名玩家');name.style.fontWeight='bold';const age=document.createElement('p');age.textContent='魚齡：'+aAge(f)+' 天';const bio=tankSpecies.find(b=>b.id===f.species),type=document.createElement('p');type.textContent='品種：'+(bio?bio.icon+' '+bio.name:'原本彩色魚');const reset=aBtn('取消今日餵食，允許重新餵食','a-reset',async()=>{if(confirm('取消餵食並允許重新餵食？'))await update(ref(db),{[`aquarium/feedLogs/${uid}`]:null,[`aquarium/foods/${uid}`]:null});});const label=document.createElement('p');label.textContent='調整魚齡';const row=document.createElement('div');row.className='a-row';const input=document.createElement('input');input.type='number';input.min='0';input.max='36500';input.step='1';input.value=String(aAge(f));input.disabled=aBusy;input.setAttribute('aria-label','魚齡天數');input.onchange=()=>{const days=Number(input.value);if(input.value.trim()===''||!Number.isInteger(days)||days<0||days>36500){alert('請輸入0～36500的整數天數');input.value=String(aAge(f));return;}if(days!==aAge(f))aRun(()=>aSetAge(uid,days));};input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();input.blur();}};const unit=document.createElement('span');unit.textContent='天';row.append(aBtn('−1 天','',()=>aShift(uid,-1)),input,unit,aBtn('＋1 天','',()=>aShift(uid,1)));const del=aBtn('🗑️ 刪除這隻魚','a-delete',async()=>{if(confirm('確定刪除這隻魚？原資料無法復原。'))await update(ref(db),{[`aquarium/fishes/${uid}`]:null,[`aquarium/foods/${uid}`]:null});});card.append(name,age,type,reset,label,row,del);aGrid.append(card);}}
+aButton.onclick=()=>{if(!isAdmin||!myUid)return;aClose();aOverlay.style.display='flex';aGrid.textContent='載入中…';aUnsub=onValue(ref(db,'aquarium/fishes'),snap=>{aData=snap.val()||{};aRender();},e=>{aGrid.textContent=e.message;});};aOverlay.querySelector('footer button').onclick=aClose;aOverlay.onclick=e=>{if(e.target===aOverlay)aClose();};document.addEventListener('keydown',e=>{if(e.key==='Escape')aClose();});aAccess();
+
+</script>
 </body>
 </html>
