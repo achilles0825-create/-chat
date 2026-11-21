@@ -1937,7 +1937,7 @@
         aquariumEntry.addEventListener('click', openAquarium);
         aquariumBackBtn.addEventListener('click', closeAquarium);
 
-const tankSpecies=[{"id": "puffer", "icon": "🐡", "name": "河豚"}, {"id": "shark", "icon": "🦈", "name": "鯊魚"}, {"id": "dolphin", "icon": "🐬", "name": "海豚"}, {"id": "whale", "icon": "🐳", "name": "鯨魚"}, {"id": "octopus", "icon": "🐙", "name": "章魚"}, {"id": "turtle", "icon": "🐢", "name": "海龜"}, {"id": "shrimp", "icon": "🦐", "name": "小蝦"}, {"id": "squid", "icon": "🦑", "name": "烏賊"}, {"id": "lobster", "icon": "🦞", "name": "龍蝦"}, {"id": "goldfish", "icon": "🐟", "name": "金魚", "hue": 180}, {"id": "koi", "icon": "🐟", "name": "錦鯉", "hue": 150}, {"id": "carp", "icon": "🐟", "name": "青魚", "hue": 250}, {"id": "salmon", "icon": "🐟", "name": "鮭魚", "hue": 130}, {"id": "tuna", "icon": "🐟", "name": "鮪魚", "hue": 20}, {"id": "sardine", "icon": "🐟", "name": "沙丁魚", "hue": 300}, {"id": "swordfish", "icon": "🐟", "name": "旗魚", "hue": 60}, {"id": "angelfish", "icon": "🐠", "name": "神仙魚", "hue": 60}, {"id": "whiteshark", "icon": "🦈", "name": "大白鯊", "hue": 0}, {"id": "hammerhead", "icon": "🦈", "name": "錘頭鯊", "hue": 60}, {"id": "whaleshark", "icon": "🦈", "name": "鯨鯊", "hue": 160}, {"id": "tigershark", "icon": "🦈", "name": "虎鯊", "hue": 30}, {"id": "oarfish", "icon": "🐟", "name": "皇帶魚"}];
+const tankSpecies=[{"id": "puffer", "icon": "🐡", "name": "河豚"}, {"id": "shark", "icon": "🦈", "name": "鯊魚"}, {"id": "dolphin", "icon": "🐬", "name": "海豚"}, {"id": "whale", "icon": "🐳", "name": "鯨魚"}, {"id": "octopus", "icon": "🐙", "name": "章魚"}, {"id": "turtle", "icon": "🐢", "name": "海龜"}, {"id": "shrimp", "icon": "🦐", "name": "小蝦"}, {"id": "squid", "icon": "🦑", "name": "烏賊"}, {"id": "lobster", "icon": "🦞", "name": "龍蝦"}, {"id": "goldfish", "icon": "🐟", "name": "金魚", "hue": 180}, {"id": "carp", "icon": "🐟", "name": "青魚", "hue": 250}, {"id": "salmon", "icon": "🐟", "name": "鮭魚", "hue": 130}, {"id": "tuna", "icon": "🐟", "name": "鮪魚", "hue": 20}, {"id": "sardine", "icon": "🐟", "name": "沙丁魚", "hue": 300}, {"id": "swordfish", "icon": "🐟", "name": "旗魚", "hue": 60}, {"id": "angelfish", "icon": "🐠", "name": "神仙魚", "hue": 60}, {"id": "whiteshark", "icon": "🦈", "name": "大白鯊", "hue": 0}, {"id": "hammerhead", "icon": "🦈", "name": "錘頭鯊", "hue": 60}, {"id": "whaleshark", "icon": "🦈", "name": "鯨鯊", "hue": 160}, {"id": "tigershark", "icon": "🦈", "name": "虎鯊", "hue": 30}, {"id": "oarfish", "icon": "🐟", "name": "皇帶魚"}];
 
 /* ===== 魚的像素圖（程式即時繪製，不需外部圖片） ===== */
 const FISH_GW = 40, FISH_GH = 24, FISH_SC = 4;
@@ -1956,7 +1956,6 @@ const FISH_SPEC = {
   squid:     { k:'squid', b:'#d98aa8', l:'#f3c6d6' },
   lobster:   { k:'lobster', b:'#d8452f', l:'#f08a6a' },
   goldfish:  { k:'fish', rx:10, ry:7, tail:'fan', tl:9, dorsal:5, vent:4, b:'#ff9a2f', l:'#ffd07a', f:'#ff7a1c' },
-  koi:       { k:'fish', rx:12, ry:6, tail:'tri', tl:7, dorsal:4, vent:3, b:'#f4f1ea', l:'#ffffff', f:'#e9e4da', patches:[{x:17,y:10,r:4,c:'#e5422b'},{x:25,y:13,r:3,c:'#e5422b'},{x:22,y:9,r:2,c:'#222'}] },
   carp:      { k:'fish', rx:12, ry:6, tail:'fork', tl:7, dorsal:4, vent:3, b:'#6f8f5a', l:'#c9d6a0', f:'#586d44' },
   salmon:    { k:'fish', rx:12, ry:6, tail:'fork', tl:7, dorsal:3, vent:3, b:'#9fb3c4', l:'#f2b8a0', f:'#6f8296', patches:[{x:17,y:9,r:1,c:'#334'},{x:21,y:10,r:1,c:'#334'},{x:25,y:9,r:1,c:'#334'},{x:19,y:12,r:1,c:'#334'}] },
   tuna:      { k:'fish', rx:13, ry:6, tail:'fork', tl:9, dorsal:4, vent:3, b:'#2f5f8f', l:'#d8e4ee', f:'#f0c53a' },
@@ -2103,7 +2102,6 @@ FISH_PIXEL_ART.turtle = { flip: true, src: "assets/fish/turtle.png" };
 FISH_PIXEL_ART.squid = { flip: true, src: "assets/fish/squid.png" };
 FISH_PIXEL_ART.lobster = { flip: false, src: "assets/fish/lobster.png" };
 FISH_PIXEL_ART.goldfish = { flip: true, src: "assets/fish/goldfish.png" };
-FISH_PIXEL_ART.koi = { flip: true, src: "assets/fish/koi.png" };
 FISH_PIXEL_ART.carp = { flip: true, src: "assets/fish/carp.png" };
 FISH_PIXEL_ART.salmon = { flip: true, src: "assets/fish/salmon.png" };
 FISH_PIXEL_ART.tuna = { flip: true, src: "assets/fish/tuna.png" };
