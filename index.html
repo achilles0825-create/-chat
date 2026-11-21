@@ -199,6 +199,7 @@
         <button id="login-btn" class="btn-primary">登入</button>
         <button id="register-btn" class="btn-secondary">註冊新帳號</button>
         <div id="auth-error"></div>
+        <div id="reg-closed-note" style="display:none; margin-top:8px; font-size:13px; color:#c0392b;">🚫 管理員已暫時禁止註冊新帳號</div>
     </div>
 
     <div id="app-container" class="container" style="display: flex;">
@@ -209,6 +210,7 @@
                     <button id="logout-btn" style="background:none; border:1px solid white; color:white; padding:3px 8px; border-radius:5px; cursor:pointer; font-size:12px;">登出</button>
                 </div>
                 <div class="sidebar-subtitle">用真名交友，但請保護朋友隱私 🤫</div>
+                <button id="reg-toggle-btn" style="display:none; background:#27ae60; border:none; color:white; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:12px;">🔓 註冊：開放中</button>
             </div>
 
             <div id="request-section" style="display: none;">
@@ -536,7 +538,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, deleteUser, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, push, onChildAdded, onChildRemoved, serverTimestamp, get, set, onValue, remove, update, onDisconnect, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
@@ -636,6 +638,39 @@
         let userStatuses = {};
         let allUsersData = {};
 
+        // ===== 禁止註冊（管理員開關）=====
+        let registrationDisabled = false;
+        const regToggleBtn = document.getElementById('reg-toggle-btn');
+        const regClosedNote = document.getElementById('reg-closed-note');
+
+        function updateRegistrationUI() {
+            registerBtn.disabled = registrationDisabled;
+            registerBtn.style.opacity = registrationDisabled ? '0.5' : '';
+            registerBtn.style.cursor = registrationDisabled ? 'not-allowed' : '';
+            regClosedNote.style.display = registrationDisabled ? 'block' : 'none';
+            regToggleBtn.style.display = isAdmin && myUid ? 'inline-block' : 'none';
+            regToggleBtn.textContent = registrationDisabled ? '🔒 註冊：已禁止（點擊開放）' : '🔓 註冊：開放中（點擊禁止）';
+            regToggleBtn.style.background = registrationDisabled ? '#e74c3c' : '#27ae60';
+        }
+
+        onValue(ref(db, 'settings/registrationDisabled'), (snap) => {
+            registrationDisabled = snap.val() === true;
+            updateRegistrationUI();
+        }, (err) => {
+            console.warn('無法讀取註冊開關（請確認資料庫規則）:', err.message);
+        });
+
+        regToggleBtn.addEventListener('click', async () => {
+            if (!isAdmin || !myUid) return;
+            const next = !registrationDisabled;
+            if (!confirm(next ? '確定要禁止新用戶註冊嗎？' : '確定要重新開放註冊嗎？')) return;
+            try {
+                await set(ref(db, 'settings/registrationDisabled'), next);
+            } catch (e) {
+                alert('設定失敗：' + e.message + '\n\n請確認 Firebase 資料庫規則是否已允許管理員寫入 settings。');
+            }
+        });
+
         function showError(msg) { authError.textContent = msg; authError.style.display = 'block'; }
         function getFakeEmail(nickname) { return nickname + "@chat.app"; }
 
@@ -668,8 +703,17 @@
             if (!nickname || !password) return showError('請輸入暱稱和密碼');
             if (nickname.includes('@')) return showError('暱稱不能包含 @ 符號');
             if (password.length < 6) return showError('密碼至少需要 6 個字元');
+            if (registrationDisabled) return showError('🚫 目前已禁止註冊新帳號');
             createUserWithEmailAndPassword(auth, getFakeEmail(nickname), password)
-                .then((userCredential) => {
+                .then(async (userCredential) => {
+                    // 建立後再確認一次：若此時已被禁止，就把剛建立的帳號刪掉
+                    let closed = false;
+                    try { closed = (await get(ref(db, 'settings/registrationDisabled'))).val() === true; } catch (e) {}
+                    if (closed) {
+                        try { await deleteUser(userCredential.user); } catch (e) { await signOut(auth); }
+                        showError('🚫 目前已禁止註冊新帳號');
+                        return;
+                    }
                     set(ref(db, 'users/' + userCredential.user.uid), { nickname: nickname, friends: {}, groups: {}, requests: {}, status: 'offline' });
                 })
                 .catch((error) => {
@@ -716,6 +760,7 @@
                 onDisconnect(myStatusRef).set('offline');
                 onDisconnect(ref(db, `users/${myUid}/lastSeen`)).set(serverTimestamp());
 
+                updateRegistrationUI();
                 loadFriends();
                 loadGroups();
                 loadRequests();
@@ -724,6 +769,7 @@
                 listenForDeleteResults();
             } else {
                 myUid = null; myNickname = null; currentChat = null;
+                updateRegistrationUI();
                 authContainer.style.display = 'flex';
                 appContainer.style.display = 'none';
                 groupList.innerHTML = ''; friendList.innerHTML = ''; requestList.innerHTML = ''; messagesDiv.innerHTML = '';
