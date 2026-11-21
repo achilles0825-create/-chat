@@ -1466,12 +1466,16 @@
         let myLastFedAt = 0;
 
         const aqCtx = aquariumCanvas.getContext('2d');
+        aqCtx.imageSmoothingEnabled = false;
         let aqW = 0, aqH = 0;
 
         function resizeAquarium() {
             const rect = aquariumCanvas.parentElement.getBoundingClientRect();
             aqW = aquariumCanvas.width = Math.max(1, rect.width);
             aqH = aquariumCanvas.height = Math.max(1, rect.height);
+            // Resizing the canvas resets smoothing to the browser default (on),
+            // so turn it back off every time or pixel-art fish render blurry/glitchy.
+            aqCtx.imageSmoothingEnabled = false;
         }
         window.addEventListener('resize', () => { if (aquariumWindow.style.display === 'flex') resizeAquarium(); });
 
@@ -2763,6 +2767,5 @@ aButton.onclick=()=>{if(!isAdmin||!myUid)return;aClose();aOverlay.style.display=
 
         window.addEventListener('beforeunload', () => { G.dirty = true; sSave(); });
     </script>
-
 
 </body></html>
