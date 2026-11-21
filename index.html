@@ -97,7 +97,7 @@
         #file-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0 5px; color: #555; }
         #send-btn { background-color: #4a86e8; color: white; border: none; border-radius: 20px; padding: 0 20px; height: 40px; font-weight: bold; cursor: pointer; }
 
-        #modal-overlay, #find-friend-modal-overlay, #delete-record-modal-overlay, #delete-request-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 20; justify-content: center; align-items: center; }
+        #modal-overlay, #find-friend-modal-overlay, #admin-accounts-modal-overlay, #delete-record-modal-overlay, #delete-request-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 20; justify-content: center; align-items: center; }
 
         .modal-box { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 350px; height: 80%; max-height: 600px; display: flex; flex-direction: column; box-sizing: border-box; }
         .modal-box h3 { margin-bottom: 15px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 10px; flex-shrink: 0;}
@@ -116,6 +116,7 @@
         .find-btn-group button { background: #3498db; color: white; border: none; padding: 8px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap;}
         .find-btn-group button:disabled { background: #ccc; cursor: not-allowed; }
         .admin-delete-btn { background: #e74c3c !important; }
+        .admin-resetpw-btn { background: #f39c12 !important; color: #fff; }
 
         /* 水族缸（全螢幕） */
         #aquarium-entry { background:#e8f5e9; border-left:4px solid #2e7d32; }
@@ -202,6 +203,21 @@
         <div id="reg-closed-note" style="display:none; margin-top:8px; font-size:13px; color:#c0392b;">🚫 管理員已暫時禁止註冊新帳號</div>
     </div>
 
+    <div id="force-reset-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:10px; padding:24px; width:90%; max-width:360px; box-sizing:border-box;">
+            <h3 style="margin-top:0;">🔑 管理員要求你重設密碼</h3>
+            <p style="font-size:14px; color:#555;">管理員已要求你的帳號重設一組新密碼，請先設定新密碼才能繼續使用。</p>
+            <div class="input-group">
+                <input type="password" id="force-reset-new" placeholder="請輸入新密碼 (至少6個字元)" autocomplete="new-password">
+            </div>
+            <div class="input-group">
+                <input type="password" id="force-reset-confirm" placeholder="請再輸入一次新密碼" autocomplete="new-password">
+            </div>
+            <div id="force-reset-error" style="color:#c0392b; font-size:13px; margin-bottom:8px;"></div>
+            <button id="force-reset-submit" class="btn-primary" style="width:100%;">確認更新密碼</button>
+        </div>
+    </div>
+
     <div id="app-container" class="container" style="display: flex;">
         <div id="sidebar">
             <div class="sidebar-header">
@@ -210,7 +226,10 @@
                     <button id="logout-btn" style="background:none; border:1px solid white; color:white; padding:3px 8px; border-radius:5px; cursor:pointer; font-size:12px;">登出</button>
                 </div>
                 <div class="sidebar-subtitle">用真名交友，但請保護朋友隱私 🤫</div>
-                <button id="reg-toggle-btn" style="display:none; background:#27ae60; border:none; color:white; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:12px;">🔓 註冊：開放中</button>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center;">
+                    <button id="reg-toggle-btn" style="display:none; background:#27ae60; border:none; color:white; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:12px;">🔓 註冊：開放中</button>
+                    <button id="admin-accounts-btn" style="display:none; background:#8e44ad; border:none; color:white; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:12px;">🛡️ 帳號管理</button>
+                </div>
             </div>
 
             <div id="request-section" style="display: none;">
@@ -235,6 +254,16 @@
                 <div class="item-info">
                     <div class="item-name">公共水族缸</div>
                     <div class="item-status">每個人都有一隻魚</div>
+                </div>
+            </div>
+
+            <div id="notes-entry" class="list-item">
+                <div class="avatar-wrapper">
+                    <div class="avatar" style="background:#8e44ad;">📝</div>
+                </div>
+                <div class="item-info">
+                    <div class="item-name">我的備忘錄</div>
+                    <div class="item-status">只有你自己看得到</div>
                 </div>
             </div>
 
@@ -512,6 +541,59 @@
         </div>
     </div>
 
+    <div id="notes-gate-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:10px; padding:24px; width:90%; max-width:340px; box-sizing:border-box;">
+            <h3 style="margin-top:0;">📝 我的備忘錄</h3>
+            <p style="font-size:14px; color:#555;">請輸入你目前的登入密碼，才能打開備忘錄。</p>
+            <div class="input-group">
+                <input type="password" id="notes-gate-password" placeholder="請輸入你的密碼" autocomplete="current-password">
+            </div>
+            <div id="notes-gate-error" style="color:#c0392b; font-size:13px; margin-bottom:8px;"></div>
+            <div style="display:flex; gap:10px;">
+                <button id="notes-gate-cancel" class="btn-cancel" style="flex:1;">取消</button>
+                <button id="notes-gate-submit" class="btn-primary" style="flex:1;">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notes-editor-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:10px; padding:24px; width:90%; max-width:420px; box-sizing:border-box;">
+            <h3 style="margin-top:0;">📝 我的備忘錄</h3>
+            <textarea id="notes-editor-textarea" placeholder="在這裡寫下只有你自己看得到的筆記..." style="width:100%; height:220px; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; resize:vertical;"></textarea>
+            <div id="notes-editor-status" style="font-size:12px; color:#888; margin-top:4px;"></div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button id="notes-editor-close" class="btn-cancel" style="flex:1;">關閉</button>
+                <button id="notes-editor-save" class="btn-primary" style="flex:1;">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-accounts-gate-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:10px; padding:24px; width:90%; max-width:340px; box-sizing:border-box;">
+            <h3 style="margin-top:0;">🛡️ 帳號管理驗證</h3>
+            <p style="font-size:14px; color:#555;">請再次輸入管理員密碼以進入帳號管理區域。</p>
+            <div class="input-group">
+                <input type="password" id="admin-gate-password" placeholder="請輸入管理員密碼" autocomplete="off">
+            </div>
+            <div id="admin-gate-error" style="color:#c0392b; font-size:13px; margin-bottom:8px;"></div>
+            <div style="display:flex; gap:10px;">
+                <button id="admin-gate-cancel" class="btn-cancel" style="flex:1;">取消</button>
+                <button id="admin-gate-submit" class="btn-primary" style="flex:1;">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-accounts-modal-overlay">
+        <div class="modal-box">
+            <h3>🛡️ 帳號管理 <span id="admin-accounts-count" style="font-size: 14px; color: #666; font-weight: normal;">(總人數: 0)</span></h3>
+            <div class="friend-checkbox-list" id="admin-accounts-list" style="padding: 0;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="cancel-admin-accounts-btn">關閉</button>
+            </div>
+        </div>
+    </div>
+
     <div id="delete-record-modal-overlay">
         <div class="modal-box" style="height: auto;">
             <h3>確認刪除紀錄</h3>
@@ -538,7 +620,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, deleteUser, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, deleteUser, updatePassword, EmailAuthProvider, reauthenticateWithCredential, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, push, onChildAdded, onChildRemoved, serverTimestamp, get, set, onValue, remove, update, onDisconnect, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
@@ -552,7 +634,7 @@
             appId: "1:287960622524:web:73a7d802bd908c4669b7b9"
         };
 
-        const ADMIN_KEY = "54188";
+        const ADMIN_KEY = "07210609";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -642,6 +724,16 @@
         let registrationDisabled = false;
         const regToggleBtn = document.getElementById('reg-toggle-btn');
         const regClosedNote = document.getElementById('reg-closed-note');
+        const adminAccountsBtn = document.getElementById('admin-accounts-btn');
+        const adminAccountsModalOverlay = document.getElementById('admin-accounts-modal-overlay');
+        const adminAccountsList = document.getElementById('admin-accounts-list');
+        const adminAccountsCount = document.getElementById('admin-accounts-count');
+        const cancelAdminAccountsBtn = document.getElementById('cancel-admin-accounts-btn');
+        const adminGateOverlay = document.getElementById('admin-accounts-gate-overlay');
+        const adminGatePassword = document.getElementById('admin-gate-password');
+        const adminGateError = document.getElementById('admin-gate-error');
+        const adminGateSubmit = document.getElementById('admin-gate-submit');
+        const adminGateCancel = document.getElementById('admin-gate-cancel');
 
         function updateRegistrationUI() {
             registerBtn.disabled = registrationDisabled;
@@ -651,6 +743,7 @@
             regToggleBtn.style.display = isAdmin && myUid ? 'inline-block' : 'none';
             regToggleBtn.textContent = registrationDisabled ? '🔒 註冊：已禁止（點擊開放）' : '🔓 註冊：開放中（點擊禁止）';
             regToggleBtn.style.background = registrationDisabled ? '#e74c3c' : '#27ae60';
+            adminAccountsBtn.style.display = isAdmin && myUid ? 'inline-block' : 'none';
         }
 
         onValue(ref(db, 'settings/registrationDisabled'), (snap) => {
@@ -668,6 +761,117 @@
                 await set(ref(db, 'settings/registrationDisabled'), next);
             } catch (e) {
                 alert('設定失敗：' + e.message + '\n\n請確認 Firebase 資料庫規則是否已允許管理員寫入 settings。');
+            }
+        });
+
+        // ===== 管理員強制重設密碼 =====
+        const forceResetOverlay = document.getElementById('force-reset-overlay');
+        const forceResetNew = document.getElementById('force-reset-new');
+        const forceResetConfirm = document.getElementById('force-reset-confirm');
+        const forceResetError = document.getElementById('force-reset-error');
+        const forceResetSubmit = document.getElementById('force-reset-submit');
+        let forceResetUnsub = null;
+
+        function watchForcePasswordReset(uid) {
+            if (forceResetUnsub) forceResetUnsub();
+            forceResetUnsub = onValue(ref(db, `users/${uid}/forcePasswordReset`), (snap) => {
+                if (snap.val() === true) {
+                    forceResetError.textContent = '';
+                    forceResetNew.value = ''; forceResetConfirm.value = '';
+                    forceResetOverlay.style.display = 'flex';
+                } else {
+                    forceResetOverlay.style.display = 'none';
+                }
+            });
+        }
+
+        forceResetSubmit.addEventListener('click', async () => {
+            const p1 = forceResetNew.value, p2 = forceResetConfirm.value;
+            forceResetError.textContent = '';
+            if (p1.length < 6) { forceResetError.textContent = '密碼至少需要 6 個字元'; return; }
+            if (p1 !== p2) { forceResetError.textContent = '兩次輸入的密碼不一致'; return; }
+            forceResetSubmit.disabled = true;
+            try {
+                await updatePassword(auth.currentUser, p1);
+                await set(ref(db, `users/${myUid}/forcePasswordReset`), false);
+                forceResetOverlay.style.display = 'none';
+                alert('密碼已更新成功！');
+            } catch (error) {
+                console.error(error);
+                if (error.code === 'auth/requires-recent-login') {
+                    forceResetError.textContent = '這個操作需要你最近剛登入過，請登出後重新登入再試一次。';
+                } else {
+                    forceResetError.textContent = '更新失敗：' + error.message;
+                }
+            } finally {
+                forceResetSubmit.disabled = false;
+            }
+        });
+
+        // ===== 個人備忘錄（需重新輸入自己密碼才能打開）=====
+        const notesEntry = document.getElementById('notes-entry');
+        const notesGateOverlay = document.getElementById('notes-gate-overlay');
+        const notesGatePassword = document.getElementById('notes-gate-password');
+        const notesGateError = document.getElementById('notes-gate-error');
+        const notesGateSubmit = document.getElementById('notes-gate-submit');
+        const notesGateCancel = document.getElementById('notes-gate-cancel');
+        const notesEditorOverlay = document.getElementById('notes-editor-overlay');
+        const notesEditorTextarea = document.getElementById('notes-editor-textarea');
+        const notesEditorStatus = document.getElementById('notes-editor-status');
+        const notesEditorClose = document.getElementById('notes-editor-close');
+        const notesEditorSave = document.getElementById('notes-editor-save');
+
+        notesEntry.addEventListener('click', () => {
+            if (!myUid) return;
+            notesGatePassword.value = '';
+            notesGateError.textContent = '';
+            notesGateOverlay.style.display = 'flex';
+            notesGatePassword.focus();
+        });
+        notesGateCancel.addEventListener('click', () => notesGateOverlay.style.display = 'none');
+
+        async function tryOpenNotes() {
+            const pwd = notesGatePassword.value;
+            if (!pwd) { notesGateError.textContent = '請輸入密碼'; return; }
+            notesGateSubmit.disabled = true;
+            try {
+                const cred = EmailAuthProvider.credential(getFakeEmail(myNickname), pwd);
+                await reauthenticateWithCredential(auth.currentUser, cred);
+                notesGateOverlay.style.display = 'none';
+                notesEditorStatus.textContent = '載入中…';
+                notesEditorOverlay.style.display = 'flex';
+                try {
+                    const snap = await get(ref(db, `users/${myUid}/memo`));
+                    notesEditorTextarea.value = snap.exists() ? snap.val() : '';
+                    notesEditorStatus.textContent = '';
+                } catch (e) {
+                    notesEditorStatus.textContent = '讀取失敗：' + e.message;
+                }
+            } catch (error) {
+                console.error(error);
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                    notesGateError.textContent = '密碼錯誤，請再試一次。';
+                } else {
+                    notesGateError.textContent = '驗證失敗：' + error.message;
+                }
+            } finally {
+                notesGateSubmit.disabled = false;
+            }
+        }
+        notesGateSubmit.addEventListener('click', tryOpenNotes);
+        notesGatePassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryOpenNotes(); });
+
+        notesEditorClose.addEventListener('click', () => notesEditorOverlay.style.display = 'none');
+        notesEditorSave.addEventListener('click', async () => {
+            notesEditorSave.disabled = true;
+            notesEditorStatus.textContent = '儲存中…';
+            try {
+                await set(ref(db, `users/${myUid}/memo`), notesEditorTextarea.value);
+                notesEditorStatus.textContent = '已儲存！';
+            } catch (e) {
+                notesEditorStatus.textContent = '儲存失敗：' + e.message;
+            } finally {
+                notesEditorSave.disabled = false;
             }
         });
 
@@ -761,6 +965,7 @@
                 onDisconnect(ref(db, `users/${myUid}/lastSeen`)).set(serverTimestamp());
 
                 updateRegistrationUI();
+                watchForcePasswordReset(myUid);
                 loadFriends();
                 loadGroups();
                 loadRequests();
@@ -770,6 +975,10 @@
             } else {
                 myUid = null; myNickname = null; currentChat = null;
                 updateRegistrationUI();
+                if (forceResetUnsub) { forceResetUnsub(); forceResetUnsub = null; }
+                forceResetOverlay.style.display = 'none';
+                notesGateOverlay.style.display = 'none';
+                notesEditorOverlay.style.display = 'none';
                 authContainer.style.display = 'flex';
                 appContainer.style.display = 'none';
                 groupList.innerHTML = ''; friendList.innerHTML = ''; requestList.innerHTML = ''; messagesDiv.innerHTML = '';
@@ -823,6 +1032,108 @@
         }
         setInterval(() => { if (myUid) { updateFriendListUI(); updateMessagesStatusUI(); } }, 60000);
 
+        // ===== 管理員：帳號管理獨立區域 =====
+        function renderAdminAccounts() {
+            adminAccountsList.innerHTML = '';
+            const users = allUsersData || {};
+            const entries = Object.entries(users).filter(([uid]) => uid !== myUid);
+            adminAccountsCount.textContent = `(總人數: ${entries.length})`;
+
+            if (entries.length === 0) {
+                adminAccountsList.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">目前沒有其他玩家</div>';
+                return;
+            }
+
+            for (const [uid, userData] of entries) {
+                const safeName = userData.nickname || "未知玩家";
+                const isOnline = userStatuses[uid] === 'online';
+
+                const div = document.createElement('div');
+                div.className = 'find-list-item';
+                div.id = `admin-user-${uid}`;
+                div.innerHTML = `
+                    <div class="info">
+                        <div class="avatar-wrapper">
+                            <div class="avatar" style="background:#8e44ad;">${esc(safeName.charAt(0).toUpperCase())}</div>
+                            <div class="status-dot ${isOnline ? 'online' : 'offline'}"></div>
+                        </div>
+                        <div>
+                            <div class="item-name">${esc(safeName)}</div>
+                            <div class="item-status">${esc(statusText(uid))}</div>
+                            <div style="font-size:11px; color:#e74c3c; margin-top:2px;">🔑 帳號: ${esc(safeName)}@chat.app</div>
+                        </div>
+                    </div>
+                    <div class="find-btn-group">
+                        <button class="admin-delete-btn" data-uid="${esc(uid)}" data-name="${esc(safeName)}">🗑️ 刪除</button>
+                        <button class="admin-resetpw-btn" data-uid="${esc(uid)}" data-name="${esc(safeName)}">🔑 強制改密碼</button>
+                    </div>
+                `;
+                adminAccountsList.appendChild(div);
+            }
+
+            adminAccountsList.querySelectorAll('.admin-delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const targetUid = e.target.dataset.uid;
+                    const targetName = e.target.dataset.name;
+
+                    if (!confirm(`⚠️ 管理員權限：確定要徹底刪除玩家「${targetName}」嗎？此操作無法復原！`)) return;
+
+                    try {
+                        await remove(ref(db, `users/${targetUid}`));
+                        await remove(ref(db, `aquarium/fishes/${targetUid}`));
+                        await remove(ref(db, `shooter/saves/${targetUid}`));
+                        alert(`已成功刪除玩家「${targetName}」`);
+
+                        const row = document.getElementById(`admin-user-${targetUid}`);
+                        if (row) row.remove();
+                        adminAccountsCount.textContent = `(總人數: ${adminAccountsList.querySelectorAll('.find-list-item').length})`;
+                    } catch (error) {
+                        console.error(error);
+                        alert(`刪除失敗：\n${error.message}\n\n請確認 Firebase 資料庫規則是否已允許管理員寫入。`);
+                    }
+                });
+            });
+
+            adminAccountsList.querySelectorAll('.admin-resetpw-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const targetUid = e.target.dataset.uid;
+                    const targetName = e.target.dataset.name;
+
+                    if (!confirm(`⚠️ 管理員權限：要求玩家「${targetName}」下次登入後必須重設新密碼，確定嗎？`)) return;
+
+                    try {
+                        await set(ref(db, `users/${targetUid}/forcePasswordReset`), true);
+                        alert(`已設定「${targetName}」下次登入需重設密碼。\n（如果對方現在正在線上，畫面會立刻跳出重設密碼視窗）`);
+                    } catch (error) {
+                        console.error(error);
+                        alert(`設定失敗：\n${error.message}\n\n請確認 Firebase 資料庫規則是否已允許管理員寫入。`);
+                    }
+                });
+            });
+        }
+
+        adminAccountsBtn.addEventListener('click', () => {
+            if (!isAdmin) return;
+            adminGatePassword.value = '';
+            adminGateError.textContent = '';
+            adminGateOverlay.style.display = 'flex';
+            adminGatePassword.focus();
+        });
+        cancelAdminAccountsBtn.addEventListener('click', () => adminAccountsModalOverlay.style.display = 'none');
+
+        function tryOpenAdminAccounts() {
+            if (adminGatePassword.value === ADMIN_KEY) {
+                adminGateOverlay.style.display = 'none';
+                renderAdminAccounts();
+                adminAccountsModalOverlay.style.display = 'flex';
+            } else {
+                adminGateError.textContent = '密碼錯誤，請再試一次。';
+            }
+        }
+        adminGateSubmit.addEventListener('click', tryOpenAdminAccounts);
+        adminGatePassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryOpenAdminAccounts(); });
+        adminGateCancel.addEventListener('click', () => adminGateOverlay.style.display = 'none');
+
         findFriendBtn.addEventListener('click', () => {
             findFriendList.innerHTML = '';
             let hasUsers = false;
@@ -839,12 +1150,6 @@
                 const isAlreadyFriend = myFriendsData[uid] ? true : false;
                 const isOnline = userStatuses[uid] === 'online';
 
-                const adminBtnHtml = isAdmin
-                    ? `<button class="admin-delete-btn" data-uid="${esc(uid)}" data-name="${esc(safeName)}">🗑️ 刪除</button>`
-                    : '';
-
-                const accountInfo = isAdmin ? `<div style="font-size:11px; color:#e74c3c; margin-top:2px;">🔑 帳號: ${esc(safeName)}@chat.app</div>` : '';
-
                 const div = document.createElement('div');
                 div.className = 'find-list-item';
                 div.id = `find-user-${uid}`;
@@ -857,14 +1162,12 @@
                         <div>
                             <div class="item-name">${esc(safeName)}</div>
                             <div class="item-status">${esc(statusText(uid))}</div>
-                            ${accountInfo}
                         </div>
                     </div>
                     <div class="find-btn-group">
                         <button class="add-this-friend-btn" data-uid="${esc(uid)}" data-name="${esc(safeName)}" ${isAlreadyFriend ? 'disabled' : ''}>
                             ${isAlreadyFriend ? '✅ 已加' : '➕ 加好友'}
                         </button>
-                        ${adminBtnHtml}
                     </div>
                 `;
                 findFriendList.appendChild(div);
@@ -889,31 +1192,7 @@
                 });
             });
 
-            document.querySelectorAll('.admin-delete-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const targetUid = e.target.dataset.uid;
-                    const targetName = e.target.dataset.name;
 
-                    if (!confirm(`⚠️ 管理員權限：確定要徹底刪除玩家「${targetName}」嗎？此操作無法復原！`)) return;
-
-                    try {
-                        await remove(ref(db, `users/${targetUid}`));
-                        await remove(ref(db, `aquarium/fishes/${targetUid}`));
-                        await remove(ref(db, `shooter/saves/${targetUid}`));
-                        alert(`已成功刪除玩家「${targetName}」`);
-
-                        const userDiv = document.getElementById(`find-user-${targetUid}`);
-                        if (userDiv) userDiv.remove();
-
-                        const currentCount = document.querySelectorAll('.find-list-item').length;
-                        totalPlayerCount.textContent = `(總人數: ${currentCount})`;
-
-                    } catch (error) {
-                        console.error(error);
-                        alert(`刪除失敗：\n${error.message}\n\n請確認 Firebase 資料庫規則是否已允許管理員寫入。`);
-                    }
-                });
-            });
 
             findFriendModalOverlay.style.display = 'flex';
         });
