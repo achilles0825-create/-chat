@@ -117,6 +117,10 @@
         .find-btn-group button:disabled { background: #ccc; cursor: not-allowed; }
         .admin-delete-btn { background: #e74c3c !important; }
         .admin-resetpw-btn { background: #f39c12 !important; color: #fff; }
+        .admin-ban-btn { background: #c0392b !important; color: #fff; }
+        .admin-unban-btn { background: #16a085 !important; color: #fff; }
+        .admin-ban-select { padding: 7px 6px; border-radius: 5px; border: 1px solid #ccc; font-size: 12px; background: #fff; }
+        .admin-ban-status { font-size: 11px; color: #c0392b; font-weight: bold; margin-top: 2px; }
 
         /* 水族缸（全螢幕） */
         #aquarium-entry { background:#e8f5e9; border-left:4px solid #2e7d32; }
@@ -772,6 +776,24 @@
         const forceResetSubmit = document.getElementById('force-reset-submit');
         let forceResetUnsub = null;
 
+        // ===== 管理員封禁帳號 =====
+        let banUnsub = null;
+        function formatBanUntil(ts) {
+            const d = new Date(ts);
+            return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        }
+        function watchBanStatus(uid) {
+            if (banUnsub) banUnsub();
+            banUnsub = onValue(ref(db, `users/${uid}/bannedUntil`), (snap) => {
+                const until = snap.val();
+                if (typeof until === 'number' && until > Date.now()) {
+                    const days = Math.max(1, Math.ceil((until - Date.now()) / 86400000));
+                    showError(`🚫 您的帳號已被管理員封禁，將於 ${formatBanUntil(until)}（約 ${days} 天後）解除封禁。`);
+                    signOut(auth);
+                }
+            });
+        }
+
         function watchForcePasswordReset(uid) {
             if (forceResetUnsub) forceResetUnsub();
             forceResetUnsub = onValue(ref(db, `users/${uid}/forcePasswordReset`), (snap) => {
@@ -966,6 +988,7 @@
 
                 updateRegistrationUI();
                 watchForcePasswordReset(myUid);
+                watchBanStatus(myUid);
                 loadFriends();
                 loadGroups();
                 loadRequests();
@@ -976,6 +999,7 @@
                 myUid = null; myNickname = null; currentChat = null;
                 updateRegistrationUI();
                 if (forceResetUnsub) { forceResetUnsub(); forceResetUnsub = null; }
+                if (banUnsub) { banUnsub(); banUnsub = null; }
                 forceResetOverlay.style.display = 'none';
                 notesGateOverlay.style.display = 'none';
                 notesEditorOverlay.style.display = 'none';
@@ -1047,10 +1071,14 @@
             for (const [uid, userData] of entries) {
                 const safeName = userData.nickname || "未知玩家";
                 const isOnline = userStatuses[uid] === 'online';
+                const bannedUntil = userData.bannedUntil;
+                const isBanned = typeof bannedUntil === 'number' && bannedUntil > Date.now();
 
                 const div = document.createElement('div');
                 div.className = 'find-list-item';
                 div.id = `admin-user-${uid}`;
+                div.style.flexDirection = 'column';
+                div.style.alignItems = 'stretch';
                 div.innerHTML = `
                     <div class="info">
                         <div class="avatar-wrapper">
@@ -1061,11 +1089,25 @@
                             <div class="item-name">${esc(safeName)}</div>
                             <div class="item-status">${esc(statusText(uid))}</div>
                             <div style="font-size:11px; color:#e74c3c; margin-top:2px;">🔑 帳號: ${esc(safeName)}@chat.app</div>
+                            ${isBanned ? `<div class="admin-ban-status">🚫 封禁中，至 ${esc(formatBanUntil(bannedUntil))}</div>` : ''}
                         </div>
                     </div>
-                    <div class="find-btn-group">
+                    <div class="find-btn-group" style="margin-top:8px; flex-wrap:wrap;">
                         <button class="admin-delete-btn" data-uid="${esc(uid)}" data-name="${esc(safeName)}">🗑️ 刪除</button>
                         <button class="admin-resetpw-btn" data-uid="${esc(uid)}" data-name="${esc(safeName)}">🔑 強制改密碼</button>
+                    </div>
+                    <div class="find-btn-group" style="margin-top:6px; flex-wrap:wrap;">
+                        <select class="admin-ban-select" data-uid="${esc(uid)}">
+                            <option value="1">封禁 1 天</option>
+                            <option value="3">封禁 3 天</option>
+                            <option value="5">封禁 5 天</option>
+                            <option value="7">封禁 7 天</option>
+                            <option value="10">封禁 10 天</option>
+                            <option value="20">封禁 20 天</option>
+                            <option value="30">封禁 30 天</option>
+                        </select>
+                        <button class="admin-ban-btn" data-uid="${esc(uid)}" data-name="${esc(safeName)}">🚫 封禁</button>
+                        ${isBanned ? `<button class="admin-unban-btn" data-uid="${esc(uid)}" data-name="${esc(safeName)}">✅ 解除封禁</button>` : ''}
                     </div>
                 `;
                 adminAccountsList.appendChild(div);
@@ -1107,6 +1149,46 @@
                     } catch (error) {
                         console.error(error);
                         alert(`設定失敗：\n${error.message}\n\n請確認 Firebase 資料庫規則是否已允許管理員寫入。`);
+                    }
+                });
+            });
+
+            adminAccountsList.querySelectorAll('.admin-ban-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const targetUid = e.target.dataset.uid;
+                    const targetName = e.target.dataset.name;
+                    const row = document.getElementById(`admin-user-${targetUid}`);
+                    const select = row ? row.querySelector('.admin-ban-select') : null;
+                    const days = parseInt((select && select.value) || '1', 10);
+
+                    if (!confirm(`⚠️ 管理員權限：確定要封禁玩家「${targetName}」 ${days} 天嗎？\n（如果對方現在正在線上，會立刻被登出）`)) return;
+
+                    const until = Date.now() + days * 86400000;
+                    try {
+                        await update(ref(db, `users/${targetUid}`), { bannedUntil: until, banDays: days });
+                        alert(`已封禁「${targetName}」 ${days} 天，至 ${formatBanUntil(until)}。`);
+                        renderAdminAccounts();
+                    } catch (error) {
+                        console.error(error);
+                        alert(`封禁失敗：\n${error.message}\n\n請確認 Firebase 資料庫規則是否已允許管理員寫入。`);
+                    }
+                });
+            });
+
+            adminAccountsList.querySelectorAll('.admin-unban-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const targetUid = e.target.dataset.uid;
+                    const targetName = e.target.dataset.name;
+
+                    if (!confirm(`確定要解除「${targetName}」的封禁嗎？`)) return;
+
+                    try {
+                        await update(ref(db, `users/${targetUid}`), { bannedUntil: null, banDays: null });
+                        alert(`已解除「${targetName}」的封禁。`);
+                        renderAdminAccounts();
+                    } catch (error) {
+                        console.error(error);
+                        alert(`解除失敗：\n${error.message}\n\n請確認 Firebase 資料庫規則是否已允許管理員寫入。`);
                     }
                 });
             });
